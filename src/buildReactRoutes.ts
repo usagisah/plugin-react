@@ -3,7 +3,7 @@ import type {
   ParseRouteContext,
   ServerRoute
 } from "./plugin.type.js"
-import type { SpecialModule } from "@white/album/cli"
+import type { SpecialModule } from "@w-hite/album/cli"
 import { pathToRegexp } from "path-to-regexp"
 import { relative, resolve } from "path"
 

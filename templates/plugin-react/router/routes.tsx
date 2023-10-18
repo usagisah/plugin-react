@@ -1,4 +1,4 @@
-import type { GuardOnEnter, FC, RouterRoute } from "@white/album"
+import type { GuardOnEnter, FC, RouterRoute } from "@w-hite/album"
 import { Routes, Route } from "react-router-dom";
 import { GuardRoute } from "./GuardRoute"
 import { lazyLoad } from "./lazyLoad"

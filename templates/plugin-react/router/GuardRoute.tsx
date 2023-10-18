@@ -1,5 +1,5 @@
-import type { GuardRouteProps, LocalData, GuardLoader } from "@white/album"
-import { useRoutesMap, RouterRoute } from "@white/album"
+import type { GuardRouteProps, LocalData, GuardLoader } from "@w-hite/album"
+import { useRoutesMap, RouterRoute } from "@w-hite/album"
 import { callPromiseWithCatch } from "../utils/callWithCatch"
 import { queryString } from "../utils/queryString"
 import { useContext, useEffect, useRef, useState } from "react"

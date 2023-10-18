@@ -1,8 +1,8 @@
-import "@white/album"
+import "@w-hite/album"
 import { ReactNode } from "react"
 import { NavigateFunction, Location } from "react-router-dom"
 
-declare module "@white/album" {
+declare module "@w-hite/album" {
   export type FC<P = {}> = {
     (props: P & { children?: ReactNode; [key: string]: any }, context?: any):
       | ReactNode

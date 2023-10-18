@@ -1,4 +1,4 @@
-import type { PluginPatchClientParam } from "@white/album/cli"
+import type { PluginPatchClientParam } from "@w-hite/album/cli"
 import type { ClientRoute, ServerRoute } from "./plugin.type.js"
 import { renderTemplate } from "./template/renderTemplate.js"
 import { buildRoutesParams } from "./buildParams/buildRoutesParams.js"

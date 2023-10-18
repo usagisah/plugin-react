@@ -1,5 +1,5 @@
-import type { AppRouterFC } from "@white/album"
-import { registryHook } from "@white/album"
+import type { AppRouterFC } from "@w-hite/album"
+import { registryHook } from "@w-hite/album"
 import { Fragment } from "react"
 import { BrowserRouter } from "react-router-dom"
 import { AppRoutes, routes, routesMap } from "./plugin-react/router/routes"

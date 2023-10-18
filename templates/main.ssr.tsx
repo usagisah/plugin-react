@@ -1,4 +1,4 @@
-import type { AlbumSSRContext, AlbumSSROptions } from "@white/album/ssr"
+import type { AlbumSSRContext, AlbumSSROptions } from "@w-hite/album/ssr"
 import { createSSRRouter } from "./plugin-react/router/createSSRRouter"
 import { readFileSync } from "fs"
 import { resolve } from "path"

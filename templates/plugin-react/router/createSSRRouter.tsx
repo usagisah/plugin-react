@@ -1,4 +1,4 @@
-import { registryHook } from "@white/album"
+import { registryHook } from "@w-hite/album"
 import { StaticRouter } from "react-router-dom/server"
 import { AppRoutes, routes, routesMap } from "./routes"
 import { Fragment } from "react"

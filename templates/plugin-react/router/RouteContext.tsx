@@ -1,4 +1,4 @@
-import { LocalData } from "@white/album"
+import { LocalData } from "@w-hite/album"
 import { createContext } from "react"
 
 export type RouteLoaderStage = "loading" | "success" | "fail"

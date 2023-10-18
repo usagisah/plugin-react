@@ -1,4 +1,4 @@
-import { PluginPatchClientParam } from "@white/album/cli"
+import { PluginPatchClientParam } from "@w-hite/album/cli"
 import { relative } from "path"
 
 export function buildMainParams(param: PluginPatchClientParam) {

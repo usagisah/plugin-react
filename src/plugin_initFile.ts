@@ -1,4 +1,4 @@
-import type { PluginInitClientParam } from "@white/album/cli"
+import type { PluginInitClientParam } from "@w-hite/album/cli"
 import type { ClientRoute, ServerRoute } from "./plugin.type.js"
 import { relative, resolve, basename } from "path"
 import { renderTemplate } from "./template/renderTemplate.js"

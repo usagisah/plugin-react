@@ -1,4 +1,4 @@
-import type { UserPlugins } from "@white/album/cli"
+import type { UserPlugins } from "@w-hite/album/cli"
 import { buildReactRoutes } from "./buildReactRoutes.js"
 import { pluginInitFile } from "./plugin_initFile.js"
 import { pluginPatchFile } from "./plugin_patchFile.js"
