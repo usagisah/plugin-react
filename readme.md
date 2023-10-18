@@ -1,0 +1,1 @@
+/// <reference types="@white/plugin-react/album" />
