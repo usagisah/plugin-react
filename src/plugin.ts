@@ -5,16 +5,19 @@ import { pluginPatchFile } from "./plugin_patchFile.js"
 import { basename, extname, resolve } from "path"
 import { existsSync } from "fs"
 import { UserConfig } from "vite"
+import { IgnoreModules, buildIgnoreModules } from "./buildIgnoreModules.js"
 import viteReactPlugin from "@vitejs/plugin-react-swc"
 
 type PluginProps<T> = T extends (props: infer P) => any ? P : never
 
 export type PluginReact = {
-  pluginReact: PluginProps<typeof viteReactPlugin>
+  pluginReact?: PluginProps<typeof viteReactPlugin>
+  ignoreModules?: IgnoreModules
 }
 
 export default function pluginReact(props?: PluginReact): UserPlugins {
-  const { pluginReact } = props ?? {}
+  const { pluginReact, ignoreModules } = props ?? {}
+  const _ignoreModules = buildIgnoreModules(ignoreModules)
 
   return {
     async findEntries(param) {
@@ -63,7 +66,8 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
       const { result, inputs, status, specialModules } = param
       const { clientRoutes, serverRoutes } = await buildReactRoutes(
         inputs.dumpInput,
-        specialModules
+        specialModules,
+        _ignoreModules
       )
       await pluginInitFile(clientRoutes, serverRoutes, param)
       result.realClientInput = resolve(
@@ -81,13 +85,14 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
       const { inputs, specialModules } = param
       const { clientRoutes, serverRoutes } = await buildReactRoutes(
         inputs.dumpInput,
-        specialModules
+        specialModules,
+        _ignoreModules
       )
       await pluginPatchFile(clientRoutes, serverRoutes, param)
     },
     async serverConfig(props) {
       const options: UserConfig = {
-        plugins: [viteReactPlugin(pluginReact ?? {})]
+        plugins: [viteReactPlugin(pluginReact)]
       }
       props.viteConfigs.push({
         name: "plugin-react",

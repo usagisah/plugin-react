@@ -1,3 +1,10 @@
-import { createContext } from "react";
+import type { SSRProps } from "@w-hite/album"
+import { createContext } from "react"
 
-export const SSRContext = createContext<any>({})
+export type SSRContextValue = {
+  serverRouteData: Record<string, string>
+  serverDynamicData: Map<string, any>
+  ssrSlideProps: SSRProps
+}
+
+export const SSRContext = createContext<SSRContextValue>({} as any)

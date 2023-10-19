@@ -6,7 +6,8 @@ const map = new Map<string, any>()
 export function useServerData(id: string, fn: any) {
   if (import.meta.env.SSR) {
     const ctx = useContext(SSRContext)
-    const { serverDynamicData, logger } = ctx
+    const { serverDynamicData, ssrSlideProps } = ctx
+    const { logger } = ssrSlideProps
 
     if (!(typeof fn === "function")) {
       const msg = "fn must be Function"
@@ -21,16 +22,8 @@ export function useServerData(id: string, fn: any) {
     throw new Promise(async resolve => {
       let res: any = null
       try {
-        res = await fn({
-          serverRouteData: ctx.serverRouteData,
-          serverDynamicData: ctx.serverDynamicData,
-          req: ctx.req,
-          cwd: ctx.cwd,
-          dumpName: ctx.dumpName,
-          dumpRoot: ctx.dumpRoot,
-          mode: ctx.mode
-        })
-      } catch (e) {
+        res = await fn(ssrSlideProps)
+      } catch (e: any) {
         logger.error(e, "useServerData")
       } finally {
         serverDynamicData.set(id, res)

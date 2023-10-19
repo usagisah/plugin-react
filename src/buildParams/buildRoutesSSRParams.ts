@@ -6,7 +6,7 @@ export function buildRoutesSSRParams(
   root: string
 ) {
   const serverRoutesArray = serverRoutes.map(route => {
-    const { name, reg, actionPath } = route
+    const { name, reg, actionPath, fullPath } = route
     const _actionPath = actionPath
       ? `"${relative(resolve(root, "plugin-react/router"), actionPath)}"`
       : null
@@ -15,6 +15,7 @@ export function buildRoutesSSRParams(
       [
         `name: "${name}"`,
         `reg: ${reg}`,
+        `fullPath: "${fullPath}"`,
         `actionPath: ${actionPath ? `"${actionPath}"` : null}`,
         `actionFactory: ${_actionPath ? `() => import(${_actionPath})` : null}`
       ].join(", ") +

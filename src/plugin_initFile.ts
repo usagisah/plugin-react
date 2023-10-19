@@ -39,6 +39,8 @@ export async function pluginInitFile(
       },
       { type: "file", template: "plugin-react/router/createSSRRouter.tsx", params: {} },
       { type: "file", template: "plugin-react/ssr/SSRContext.ts", params: {} },
+      { type: "file", template: "plugin-react/ssr/buildStaticInfo.tsx", params: {} },
+      { type: "file", template: "plugin-react/ssr/resolveActionRouteData.ts", params: {} },
       { type: "file", template: "plugin-react/hooks/useServer.ts", params: {} },
       { type: "file", template: "plugin-react/hooks/useServerData.ts", params: {} },
       { type: "file", template: "plugin-react/hooks/useServerRouteData.ts", params: {} }

@@ -9,44 +9,45 @@ import { relative, resolve } from "path"
 
 export async function buildReactRoutes(
   dumpInput: string,
-  specialModule: SpecialModule[]
+  specialModule: SpecialModule[],
+  ignoreModules: RegExp[]
 ) {
-  let clientRoutes: ClientRoute[] = []
-  let serverRoutes: ServerRoute[] = []
-
-  await walkModule(specialModule, {
+  const { clientRoutes, serverRoutes } = await walkModule(specialModule, {
     dumpInput,
     parentClientPath: "",
     parentServerPath: "",
-    clientRoutes,
-    serverRoutes
+    ignoreModules
   })
-
-  clientRoutes = orderRoutes(clientRoutes)
-  clientRoutes = moveErrorToLast(clientRoutes)
-
-  serverRoutes = orderRoutes(serverRoutes)
-  serverRoutes = moveErrorToLast(serverRoutes)
-
-  return { clientRoutes, serverRoutes }
+  return {
+    clientRoutes: moveErrorToLast(clientRoutes),
+    serverRoutes: moveErrorToLast(orderRoutes(serverRoutes))
+  }
 }
 
 async function walkModule(mods: SpecialModule[], ctx: ParseRouteContext) {
-  await Promise.all(mods.map(mod => moduleToClientRoute(mod, ctx)))
+  const {ignoreModules} = ctx
+  let clientRoutes: ClientRoute[] = []
+  let serverRoutes: ServerRoute[] = []
+
+  for (const mod of mods) {
+    if (ignoreModules.some(reg => reg.test(mod.fileName))) {
+      continue
+    }
+
+    const _res = await moduleToRoute(mod, ctx)
+    clientRoutes.push(_res.clientRoute)
+    serverRoutes.push(_res.serverRoute, ..._res.serverRoute.children)
+  }
+  return { clientRoutes: orderRoutes(clientRoutes), serverRoutes }
 }
 
-async function moduleToClientRoute(mod: SpecialModule, ctx: ParseRouteContext) {
-  const {
-    dumpInput,
-    parentClientPath,
-    parentServerPath,
-    clientRoutes,
-    serverRoutes
-  } = ctx
+async function moduleToRoute(mod: SpecialModule, ctx: ParseRouteContext) {
+  const { dumpInput, parentClientPath, parentServerPath, ignoreModules } = ctx
 
+  const routeRecordName = mod.fileName
   const clientCompPath = mod.routePath.replaceAll("$", ":")
   const clientRoute: ClientRoute = {
-    name: "Route_" + mod.fileName,
+    name: routeRecordName,
     path: clientCompPath,
     fullPath: connectPath(parentClientPath, clientCompPath),
     component: `lazyLoad(() => import("${relative(
@@ -62,7 +63,7 @@ async function moduleToClientRoute(mod: SpecialModule, ctx: ParseRouteContext) {
   const serverCompPath = clientCompPath === "/*" ? "/(.*)" : clientCompPath
   const serverFullPath = connectPath(parentServerPath, serverCompPath)
   const serverRoute: ServerRoute = {
-    name: "Route_" + mod.fileName,
+    name: routeRecordName,
     reg: pathToRegexp(serverFullPath, null, { sensitive: false }),
     path: serverCompPath,
     fullPath: serverFullPath,
@@ -70,22 +71,18 @@ async function moduleToClientRoute(mod: SpecialModule, ctx: ParseRouteContext) {
     children: []
   }
 
-  clientRoutes.push(clientRoute)
-  serverRoutes.push(serverRoute)
-
   if (mod.children.length > 0) {
-    await walkModule(mod.children, {
+     const _res = await walkModule(mod.children, {
       dumpInput,
       parentClientPath: clientRoute.fullPath,
       parentServerPath: serverRoute.fullPath,
-      clientRoutes: clientRoute.children,
-      serverRoutes: serverRoute.children
+      ignoreModules
     })
+    clientRoute.children = _res.clientRoutes
+    serverRoute.children = _res.serverRoutes
   }
 
-  clientRoute.children = orderRoutes(clientRoute.children)
-  serverRoute.children = orderRoutes(serverRoute.children)
-  serverRoutes.push(...serverRoute.children)
+  return { clientRoute, serverRoute }
 }
 
 function connectPath(p1: string, p2: string) {
