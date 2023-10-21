@@ -1,9 +1,9 @@
 import type { UserPlugins } from "@w-hite/album/cli"
+import { findEntryPath } from "@w-hite/album/utils/utils"
 import { buildReactRoutes } from "./buildReactRoutes.js"
 import { pluginInitFile } from "./plugin_initFile.js"
 import { pluginPatchFile } from "./plugin_patchFile.js"
-import { basename, extname, resolve } from "path"
-import { existsSync } from "fs"
+import { basename, resolve, parse as pathParse } from "path"
 import { UserConfig } from "vite"
 import { IgnoreModules, buildIgnoreModules } from "./buildIgnoreModules.js"
 import viteReactPlugin from "@vitejs/plugin-react-swc"
@@ -21,45 +21,45 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
 
   return {
     async findEntries(param) {
-      const { result } = param
+      const { result, inputs } = param
       const { main, mainSSR, module } = result
 
-      const cwd = process.cwd()
-      const exts = [".tsx", ".ts"]
-      const prefixes = ["src", "client", "./"]
-
-      const _main = main && extname(main).length > 1 ? main : "main"
-      mainFile: for (const ext of exts) {
-        for (const prefix of prefixes) {
-          const filePath = resolve(cwd, prefix, _main + ext)
-          if (existsSync(filePath)) {
-            result.main = filePath
-            break mainFile
-          }
-        }
-      }
-
-      const _module = module ?? "modules"
-      for (const prefix of prefixes) {
-        const filePath = resolve(cwd, prefix, _module)
-        if (existsSync(filePath)) {
-          result.module = filePath
-          break
-        }
+      const mainInfo = pathParse(main ?? "")
+      const modulePath = module ? module.modulePath : "modules"
+      const [_main, _modulePath] = await Promise.all([
+        findEntryPath({
+          cwd: inputs.cwd,
+          name: main
+            ? mainInfo.ext.length > 1
+              ? mainInfo.name
+              : main
+            : "main",
+          exts: [".tsx", ".ts"]
+        }),
+        findEntryPath({
+          cwd: inputs.cwd,
+          name: modulePath,
+          exts: []
+        })
+      ])
+      result.main = _main
+      result.module = {
+        modulePath: _modulePath,
+        moduleName: module.moduleName ?? basename(_modulePath)
       }
 
       if (mainSSR) {
-        const _mainSSR =
-          mainSSR && extname(mainSSR).length > 1 ? mainSSR : "main.ssr"
-        mainSSRFile: for (const ext of exts) {
-          for (const prefix of prefixes) {
-            const filePath = resolve(cwd, prefix, _mainSSR + ext)
-            if (existsSync(filePath)) {
-              result.mainSSR = filePath
-              break mainSSRFile
-            }
-          }
-        }
+        const mainSSRInfo = pathParse(mainSSR ?? "")
+        const _mainSSR = await findEntryPath({
+          cwd: inputs.cwd,
+          name: mainSSR
+            ? mainSSRInfo.ext.length > 1
+              ? mainSSRInfo.name
+              : mainSSR
+            : "main.ssr",
+          exts: [".tsx", ".ts"]
+        })
+        result.mainSSR = _mainSSR
       }
     },
     async initClient(param) {
