@@ -24,21 +24,15 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
       const { result, inputs } = param
       const { main, mainSSR, module } = result
 
-      const mainInfo = pathParse(main ?? "")
-      const modulePath = module ? module.modulePath : "modules"
       const [_main, _modulePath] = await Promise.all([
         findEntryPath({
           cwd: inputs.cwd,
-          name: main
-            ? mainInfo.ext.length > 1
-              ? mainInfo.name
-              : main
-            : "main",
+          name: main ?? "main",
           exts: [".tsx", ".ts"]
         }),
         findEntryPath({
           cwd: inputs.cwd,
-          name: modulePath,
+          name: module.modulePath ?? "modules",
           exts: []
         })
       ])
@@ -49,14 +43,9 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
       }
 
       if (mainSSR) {
-        const mainSSRInfo = pathParse(mainSSR ?? "")
         const _mainSSR = await findEntryPath({
           cwd: inputs.cwd,
-          name: mainSSR
-            ? mainSSRInfo.ext.length > 1
-              ? mainSSRInfo.name
-              : mainSSR
-            : "main.ssr",
+          name: mainSSR ?? "main.ssr",
           exts: [".tsx", ".ts"]
         })
         result.mainSSR = _mainSSR
