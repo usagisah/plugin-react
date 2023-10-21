@@ -14,7 +14,8 @@ export async function pluginInitFile(
   const {
     fileManager,
     inputs: { dumpInput, ssrInput },
-    status: { ssr }
+    status: { ssr },
+    clientConfig: { router }
   } = param
   await common(clientRoutes, param)
   if (ssr) {
@@ -37,13 +38,33 @@ export async function pluginInitFile(
         template: "plugin-react/router/routes.ssr.tsx",
         params: buildRoutesSSRParams(serverRoutes, dumpInput)
       },
-      { type: "file", template: "plugin-react/router/createSSRRouter.tsx", params: {} },
+      {
+        type: "file",
+        template: "plugin-react/router/createSSRRouter.tsx",
+        params: { basename: router.basename }
+      },
       { type: "file", template: "plugin-react/ssr/SSRContext.ts", params: {} },
-      { type: "file", template: "plugin-react/ssr/buildStaticInfo.tsx", params: {} },
-      { type: "file", template: "plugin-react/ssr/resolveActionRouteData.ts", params: {} },
+      {
+        type: "file",
+        template: "plugin-react/ssr/buildStaticInfo.tsx",
+        params: {}
+      },
+      {
+        type: "file",
+        template: "plugin-react/ssr/resolveActionRouteData.ts",
+        params: {}
+      },
       { type: "file", template: "plugin-react/hooks/useServer.ts", params: {} },
-      { type: "file", template: "plugin-react/hooks/useServerData.ts", params: {} },
-      { type: "file", template: "plugin-react/hooks/useServerRouteData.ts", params: {} }
+      {
+        type: "file",
+        template: "plugin-react/hooks/useServerData.ts",
+        params: {}
+      },
+      {
+        type: "file",
+        template: "plugin-react/hooks/useServerRouteData.ts",
+        params: {}
+      }
     ]
 
     await Promise.all(
@@ -67,11 +88,23 @@ async function common(clientRoutes: any[], param: PluginInitClientParam) {
   const clientConfigs = [
     { type: "file", template: "plugin-react/hooks/useLoader.ts", params: {} },
     { type: "file", template: "plugin-react/hooks/useRouter.ts", params: {} },
-    { type: "file", template: "plugin-react/utils/callWithCatch.ts", params: {} },
+    {
+      type: "file",
+      template: "plugin-react/utils/callWithCatch.ts",
+      params: {}
+    },
     { type: "file", template: "plugin-react/utils/queryString.ts", params: {} },
     { type: "file", template: "plugin-react/utils/type.ts", params: {} },
-    { type: "file", template: "plugin-react/router/RouteContext.tsx", params: {} },
-    { type: "file", template: "plugin-react/router/GuardRoute.tsx", params: {} },
+    {
+      type: "file",
+      template: "plugin-react/router/RouteContext.tsx",
+      params: {}
+    },
+    {
+      type: "file",
+      template: "plugin-react/router/GuardRoute.tsx",
+      params: {}
+    },
     { type: "file", template: "plugin-react/router/lazyLoad.tsx", params: {} },
     {
       type: "file",

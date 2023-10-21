@@ -15,7 +15,7 @@ registryHook("useLoader", useLoader)
 $ssr_hooks_registry$
 
 const AppRouterComponent: AppRouterFC = ({ Layout = Fragment, ...props }) => (
-  <BrowserRouter>
+  <BrowserRouter basename="$basename$">
     <Layout>
       <AppRoutes {...props} />
     </Layout>

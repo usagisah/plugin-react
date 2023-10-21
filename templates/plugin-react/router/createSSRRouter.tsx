@@ -19,7 +19,7 @@ registryHook("useServerRouteData", useServerRouteData)
 
 export function createSSRRouter(location: string) {
   const AppRouterComponent: any = ({ Layout = Fragment, ...props }) => (
-    <StaticRouter location={location}>
+    <StaticRouter location={location} basename="$basename$">
       <Layout>
         <AppRoutes {...props} />
       </Layout>

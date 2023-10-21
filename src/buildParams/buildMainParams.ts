@@ -4,7 +4,8 @@ import { relative } from "path"
 export function buildMainParams(param: PluginPatchClientParam) {
   const {
     status: { ssr },
-    inputs: { dumpInput, clientInput }
+    inputs: { dumpInput, clientInput },
+    clientConfig: { router }
   } = param
   let ssr_hooks_import = ""
   let ssr_hooks_registry = ""
@@ -17,6 +18,7 @@ export function buildMainParams(param: PluginPatchClientParam) {
   return {
     mainPath: relative(dumpInput, clientInput),
     ssr_hooks_import,
-    ssr_hooks_registry
+    ssr_hooks_registry,
+    basename: router.basename
   }
 }
