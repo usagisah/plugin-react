@@ -11,13 +11,17 @@ export async function pluginInitFile(
   serverRoutes: ServerRoute[],
   param: PluginInitClientParam
 ) {
+  const pendingPromises: Promise<any>[] = []
   const {
     fileManager,
     inputs: { dumpInput, ssrInput },
     status: { ssr },
-    clientConfig: { router }
+    clientConfig: { router },
+    ssrCompose
   } = param
-  await common(clientRoutes, param)
+
+  pendingPromises.push(common(clientRoutes, param))
+
   if (ssr) {
     const serverEntryName = basename(ssrInput)
     const ssrConfigs = [
@@ -67,8 +71,24 @@ export async function pluginInitFile(
       }
     ]
 
-    await Promise.all(
-      ssrConfigs.map(async f =>
+    pendingPromises.push(
+      ...ssrConfigs.map(async f =>
+        fileManager.add(
+          f.type as "file",
+          f.outFile ?? f.template,
+          await renderTemplate(f.template, f.params)
+        )
+      )
+    )
+  }
+
+  if (ssrCompose) {
+    const ssrComposeConfigs = [
+      { type: "file", template: "main.ssr.compose.tsx", params: {} },
+      { type: "file", template: "ssr-compose/renderCompToString.ts", params: {} }
+    ]
+    pendingPromises.push(
+      ...ssrComposeConfigs.map(async (f: any) =>
         fileManager.add(
           f.type as "file",
           f.outFile ?? f.template,

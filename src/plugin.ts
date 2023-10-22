@@ -50,9 +50,11 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
         })
         result.mainSSR = _mainSSR
       }
+
+
     },
     async initClient(param) {
-      const { result, inputs, status, specialModules } = param
+      const { result, inputs, status, specialModules, ssrCompose } = param
       const { clientRoutes, serverRoutes } = await buildReactRoutes(
         inputs.dumpInput,
         specialModules,
@@ -68,6 +70,9 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
           inputs.dumpInput,
           basename(inputs.ssrInput)
         )
+      }
+      if (ssrCompose) {
+        result.realSSRComposeInput = resolve(inputs.dumpInput, "main.ssr.compose.tsx")
       }
     },
     async patchClient(param) {
