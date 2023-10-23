@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { LocalData } from "@w-hite/album"
 import { createContext } from "react"
 

@@ -13,7 +13,10 @@ async function scanTemplates() {
   const files = await fg(cwd + "/**/*.{tsx,ts}")
   await Promise.all(
     files.map(async file => {
-      templates.set(file.slice(cwd.length + 1), readFileSync(file, "utf-8"))
+      templates.set(
+        file.slice(cwd.length + 1),
+        readFileSync(file, "utf-8").replace("// @ts-nocheck", "")
+      )
     })
   )
   return templates

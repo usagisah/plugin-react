@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { registryHook } from "@w-hite/album"
 import { StaticRouter } from "react-router-dom/server"
 import { AppRoutes, routes, routesMap } from "./routes"

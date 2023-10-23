@@ -1,3 +1,4 @@
+// @ts-nocheck
 import { AlbumSSRContext, AlbumSSROptions } from "@w-hite/album/ssr"
 import { readFileSync } from "fs"
 import { resolve } from "path"
@@ -58,7 +59,7 @@ export function buildStaticInfo(
   return staticInfo
 }
 
-function buildPreLinks(manifest: Record<string, any>) {
+export function buildPreLinks(manifest: Record<string, any>) {
   let preLinks: any[] = []
   let entryFile: any = {}
   for (const key in manifest) {
@@ -79,21 +80,21 @@ function buildPreLinks(manifest: Record<string, any>) {
     }
   }
 
-  function renderLinkArrAttr(file: string) {
-    file = "/" + file
-
-    if (file.endsWith(".js")) {
-      return { rel: "modulepreload", href: file, crossOrigin: "true" }
-    } else if (file.endsWith(".css")) {
-      return { rel: "stylesheet", href: file }
-    } else if (file.endsWith(".gif")) {
-      return { rel: "preload", as: "image", type: "image/gif", href: file }
-    } else if (file.endsWith(".jpg") || file.endsWith(".jpeg")) {
-      return { rel: "preload", as: "image", type: "image/jpeg", href: file }
-    } else if (file.endsWith(".png")) {
-      return { rel: "preload", as: "image", type: "image/png", href: file }
-    }
-  }
-
   return { preLinks, entryFile }
+}
+
+export function renderLinkArrAttr(file: string) {
+  file = "/" + file
+
+  if (file.endsWith(".js")) {
+    return { rel: "modulepreload", href: file, crossOrigin: "true" }
+  } else if (file.endsWith(".css")) {
+    return { rel: "stylesheet", href: file }
+  } else if (file.endsWith(".gif")) {
+    return { rel: "preload", as: "image", type: "image/gif", href: file }
+  } else if (file.endsWith(".jpg") || file.endsWith(".jpeg")) {
+    return { rel: "preload", as: "image", type: "image/jpeg", href: file }
+  } else if (file.endsWith(".png")) {
+    return { rel: "preload", as: "image", type: "image/png", href: file }
+  }
 }

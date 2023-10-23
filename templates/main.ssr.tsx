@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { AlbumSSRContext, AlbumSSROptions } from "@w-hite/album/ssr"
 import { createSSRRouter } from "./plugin-react/router/createSSRRouter"
 import { renderToPipeableStream } from "react-dom/server"

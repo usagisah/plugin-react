@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { GuardRouteProps, LocalData, GuardLoader } from "@w-hite/album"
 import { useRoutesMap, RouterRoute } from "@w-hite/album"
 import { callPromiseWithCatch } from "../utils/callWithCatch"

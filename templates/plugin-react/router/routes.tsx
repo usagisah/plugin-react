@@ -1,3 +1,4 @@
+// @ts-nocheck
 import type { GuardOnEnter, FC, RouterRoute } from "@w-hite/album"
 import { Routes, Route } from "react-router-dom";
 import { GuardRoute } from "./GuardRoute"
