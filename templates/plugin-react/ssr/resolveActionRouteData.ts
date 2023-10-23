@@ -1,12 +1,11 @@
-import { AlbumSSRContext } from "@w-hite/album/ssr"
+import type { AlbumSSRContext, AlbumSSRContextProps } from "@w-hite/album/ssr"
 import { matchPath } from "react-router-dom"
-import { SSRContextValue } from "./SSRContext"
 import { serverRoutes } from "../router/routes.ssr"
 import { queryString } from "../utils/queryString"
 import { isPlainObject } from "../utils/type"
 
 export async function resolveActionRouteData(
-  { ssrSlideProps }: SSRContextValue,
+  { ssrSlideProps }: AlbumSSRContextProps,
   { logger }: AlbumSSRContext
 ) {
   let actionData: any = {}
@@ -22,7 +21,7 @@ export async function resolveActionRouteData(
   const route = serverRoutes.find(route => route.reg.test(pathname))
   if (route) {
     ssrSlideProps.query = queryString.parse(search)
-    ssrSlideProps.params = matchPath(route.fullPath, pathname)?.params ?? {}
+    ssrSlideProps.params = (matchPath(route.fullPath, pathname)?.params ?? {}) as any
 
     if (route.actionFactory) {
       try {

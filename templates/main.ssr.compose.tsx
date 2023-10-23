@@ -1,70 +1,62 @@
-import {} from "@w-hite/album/ssr"
 import { createModulePath } from "@w-hite/album/utils/modules/createModulePath"
 import { resolve } from "path"
 import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "fs"
 import { renderComponentToString } from "./ssr-compose/renderCompToString"
 import { createHash } from "crypto"
-
-/* 
-    sourcePath,
-    moduleRoot,
-    viteComponentBuild,
-
-    props,
-    sources,
-    serverRouteData
-    albumSSROptions,
-    albumSSRContext,
-
-    ssrContextProps?
-*/
+import {
+  SSRComposeCache,
+  SSRComposeManifest,
+  SSRComposeRenderRemoteComponentOptions,
+  SSRComposeRenderRemoteComponentReturn
+} from "./ssr-compose/ssr-compose.type"
 
 const { __dirname } = createModulePath(import.meta.url)
 const cachePath = resolve(__dirname, "ssr-compose/.cache")
 
-export async function renderRemoteComponent(options: any) {
-  const { sourcePath, moduleRoot, viteComponentBuild } = options
+export async function renderRemoteComponent(
+  renderOptions: SSRComposeRenderRemoteComponentOptions
+): Promise<SSRComposeRenderRemoteComponentReturn> {
+  const { renderProps, ssrComposeContextProps } = renderOptions
+  const { sourcePath } = renderProps
+  const { moduleRoot, viteComponentBuild } =
+    ssrComposeContextProps.ssrComposeOptions
 
-  try {
-    const filePath = resolve(moduleRoot, sourcePath)
-    if (!existsSync(filePath)) {
-      throw "资源不存在"
-    }
+  const filePath = resolve(moduleRoot, sourcePath)
+  if (!existsSync(filePath)) {
+    throw "资源不存在"
+  }
 
-    let cacheManifest = await loadCacheManifest()
-    if (
-      !cacheManifest ||
-      !cacheManifest[sourcePath] ||
-      isChange(cacheManifest[sourcePath])
-    ) {
-      const outDirName = createHash("md5").update(sourcePath).digest("hex")
-      const outDir = resolve(cachePath, outDirName)
-      await viteComponentBuild({ input: filePath, outDir })
-      cacheManifest = await flushCacheManifest(
-        cacheManifest,
-        sourcePath,
-        filePath,
-        outDir
-      )
-    }
+  let cacheManifest = await loadCacheManifest()
+  if (
+    !cacheManifest ||
+    !cacheManifest[sourcePath] ||
+    checkCacheChange(cacheManifest[sourcePath])
+  ) {
+    const outDirName = createHash("md5").update(sourcePath).digest("hex")
+    const outDir = resolve(cachePath, outDirName)
+    await viteComponentBuild({ input: filePath, outDir })
+    cacheManifest = await flushCacheManifest(
+      cacheManifest,
+      sourcePath,
+      filePath,
+      outDir
+    )
+  }
 
-    const cacheInfo = cacheManifest[sourcePath]
-    const renderRes = await renderComponentToString(cacheInfo.filePath, options)
-    return {
-      status: "success",
-      httpPath: cacheInfo.httpPath,
-      preLoads: [
-        ...renderRes.preloads,
-        ...cacheInfo.preloads.map(value => ({ type: "css", value }))
-      ],
-      html: renderRes.html
-    }
-  } catch (error) {
-    return { status: "fail", error }
+  const cacheInfo = cacheManifest[sourcePath]
+  const { html, serverDynamicData } = await renderComponentToString(
+    cacheInfo.filePath,
+    renderOptions
+  )
+  return {
+    html,
+    serverDynamicData,
+    httpPath: cacheInfo.httpPath,
+    assets: cacheInfo.assets
   }
 }
 
-function isChange(cacheInfo: any) {
+function checkCacheChange(cacheInfo: any) {
   if (!cacheInfo) return true
   return statSync(cacheInfo.originPath).atimeMs > cacheInfo.lastChange
 }
@@ -74,7 +66,9 @@ async function loadCacheManifest() {
   if (!existsSync(cacheManifestPath)) return null
 
   try {
-    return JSON.parse(readFileSync(cacheManifestPath, "utf-8"))
+    return JSON.parse(
+      readFileSync(cacheManifestPath, "utf-8")
+    ) as SSRComposeManifest
   } catch {
     rmSync(cachePath, { force: true, recursive: true })
     return null
@@ -82,7 +76,7 @@ async function loadCacheManifest() {
 }
 
 async function flushCacheManifest(
-  cacheManifest: any,
+  cacheManifest: null | SSRComposeManifest,
   sourcePath: string,
   input: string,
   outDir: string
@@ -90,12 +84,14 @@ async function flushCacheManifest(
   const manifest = JSON.parse(
     readFileSync(resolve(outDir, "manifest.json"), "utf-8")
   )
-  const cache: any = {
+  const cache: SSRComposeCache = {
     lastChange: statSync(input).atimeMs,
-    originPath: input,
+    originFilePath: input,
     filePath: "",
     httpPath: "",
-    preloads: []
+    assets: {
+      css: []
+    }
   }
   for (const key of Object.getOwnPropertyNames(manifest)) {
     const value = manifest[key]
@@ -103,7 +99,7 @@ async function flushCacheManifest(
       cache.filePath = resolve(outDir, value.file)
       cache.httpPath = cache.filePath.slice(process.cwd().length)
     } else if (value.file.endsWith(".css")) {
-      cache.preloads.push(
+      cache.assets.css.push(
         resolve(outDir, value.file).slice(process.cwd().length)
       )
     }
