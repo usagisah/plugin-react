@@ -10,13 +10,13 @@ import { renderComponentToString } from "./ssr-compose/renderCompToString"
 import { useServer } from "./plugin-react/hooks/useServer"
 import { useServerData } from "./plugin-react/hooks/useServerData"
 import { useServerRouteData } from "./plugin-react/hooks/useServerRouteData"
-import { RemoteAppLoader } from "./ssr-compose/components/RemoteAppLoader"
+import { createRemoteAppLoader } from "./ssr-compose/components/RemoteAppLoader"
 registryHook("useServer", useServer)
 registryHook("useServerData", useServerData)
 registryHook("useServerRouteData", useServerRouteData)
-registryHook("RemoteAppLoader", RemoteAppLoader)
 registryHook("useRoutes", () => [])
 registryHook("useRoutesMap", () => new Map())
+registryHook("createRemoteAppLoader", createRemoteAppLoader)
 
 const { __dirname } = createModulePath(import.meta.url)
 const cachePath = resolve(__dirname, "ssr-compose/.cache")

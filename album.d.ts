@@ -28,16 +28,15 @@ declare module "@w-hite/album" {
   export type AppRouterFC = FC<{ Layout: FC<any>; onEnter?: GuardOnEnter }>
 
   export type RemoteAppLoaderProps = {
-    type?: "component"
-    remote?: boolean
     sourcePath: string
     wrapperName?: string
     wrapperProps?: Record<string, any>
     [propKey: string]: any
   }
 
-  export interface ComponentRemoteAppLoader {
-    (props: RemoteAppLoaderProps & { children?: ReactNode; [key: string]: any }, context?: any): ReactNode | JSX.Element
-    [key: string]: any
+  export type ComponentRemoteAppLoader = FC<RemoteAppLoaderProps>
+
+  export interface CreateRemoteAppLoader {
+    (props: { remote: boolean, url?: string }): ComponentRemoteAppLoader
   }
 }
