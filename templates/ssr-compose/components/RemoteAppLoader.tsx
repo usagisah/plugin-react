@@ -1,4 +1,4 @@
-import type { SSRComposeRenderRemoteComponentReturn } from "../ssr-compose.type"
+import type { SSRComposeRenderRemoteComponentReturn } from "@w-hite/album/ssr"
 import { createElement, useContext } from "react"
 import { SSRComposeContext } from "../SSRComposeContext"
 import { SSRContext } from "../../plugin-react/ssr/SSRContext"
@@ -66,12 +66,10 @@ export function RemoteAppLoader(_props: RemoteAppLoaderProps) {
               }
             }).then(r => r.json())
           : renderRemoteComponent({ props, sourcePath }))
-        res.serverDynamicData.forEach((value, id) => {
-          serverDynamicData.set(id, value)
-        })
+        Object.assign(serverDynamicData, res.serverDynamicData)
         if (!_source) {
           _source = sources[sourcePath] = {
-            httpPath: res.httpPath,
+            importPath: res.importPath,
             assets: {
               css: new Set()
             },

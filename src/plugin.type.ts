@@ -8,12 +8,12 @@ export type ClientRoute = {
 }
 
 export type ServerRoute = {
-  name: string;
-  reg: RegExp;
-  path: string;
-  fullPath: string;
-  actionPath?: string;
-  children: ServerRoute[];
+  name: string
+  reg: RegExp
+  path: string
+  fullPath: string
+  actionPath?: string
+  children: ServerRoute[]
 }
 
 export type ParseRouteContext = {

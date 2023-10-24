@@ -1,13 +1,13 @@
 // @ts-nocheck
 import { registryHook } from "@w-hite/album"
-import { StaticRouter } from "react-router-dom/server"
-import { AppRoutes, routes, routesMap } from "./routes"
 import { Fragment } from "react"
-import { useRouter } from "../hooks/useRouter"
+import { StaticRouter } from "react-router-dom/server"
 import { useLoader } from "../hooks/useLoader"
+import { useRouter } from "../hooks/useRouter"
 import { useServer } from "../hooks/useServer"
-import { useServerRouteData } from "../hooks/useServerRouteData"
 import { useServerData } from "../hooks/useServerData"
+import { useServerRouteData } from "../hooks/useServerRouteData"
+import { AppRoutes, routes, routesMap } from "./routes"
 
 registryHook("useRoutes", () => routes)
 registryHook("useRoutesMap", () => routesMap)
@@ -16,11 +16,11 @@ registryHook("useLoader", useLoader)
 registryHook("useServer", useServer)
 registryHook("useServerData", useServerData)
 registryHook("useServerRouteData", useServerRouteData)
-
+"$RemoteAppLoader$"
 
 export function createSSRRouter(location: string) {
   const AppRouterComponent: any = ({ Layout = Fragment, ...props }) => (
-    <StaticRouter location={location} basename="$basename$">
+    <StaticRouter location={location} basename="'$basename$'">
       <Layout>
         <AppRoutes {...props} />
       </Layout>

@@ -1,8 +1,8 @@
 // @ts-nocheck
 import type { GuardRouteProps, LocalData, GuardLoader } from "@w-hite/album"
+import { queryString } from "@w-hite/album/utils/common/queryString"
 import { useRoutesMap, RouterRoute } from "@w-hite/album"
 import { callPromiseWithCatch } from "../utils/callWithCatch"
-import { queryString } from "../utils/queryString"
 import { useContext, useEffect, useRef, useState } from "react"
 import {
   useLocation,

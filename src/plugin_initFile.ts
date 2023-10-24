@@ -1,16 +1,12 @@
 import type { PluginInitClientParam } from "@w-hite/album/cli"
-import type { ClientRoute, ServerRoute } from "./plugin.type.js"
-import { relative, resolve, basename } from "path"
-import { renderTemplate } from "./template/renderTemplate.js"
+import { basename, relative, resolve } from "path"
+import { buildMainParams } from "./buildParams/buildMainParams.js"
 import { buildRoutesParams } from "./buildParams/buildRoutesParams.js"
 import { buildRoutesSSRParams } from "./buildParams/buildRoutesSSRParams.js"
-import { buildMainParams } from "./buildParams/buildMainParams.js"
+import type { ClientRoute, ServerRoute } from "./plugin.type.js"
+import { renderTemplate } from "./template/renderTemplate.js"
 
-export async function pluginInitFile(
-  clientRoutes: ClientRoute[],
-  serverRoutes: ServerRoute[],
-  param: PluginInitClientParam
-) {
+export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: ServerRoute[], param: PluginInitClientParam) {
   const pendingPromises: Promise<any>[] = []
   const {
     fileManager,
@@ -30,10 +26,7 @@ export async function pluginInitFile(
         template: "main.ssr.tsx",
         outFile: serverEntryName,
         params: {
-          mainEntryPath: relative(
-            process.cwd(),
-            resolve(dumpInput, "main.tsx")
-          ),
+          mainEntryPath: relative(process.cwd(), resolve(dumpInput, "main.tsx")),
           mainServerPath: relative(dumpInput, ssrInput)
         }
       },
@@ -45,7 +38,7 @@ export async function pluginInitFile(
       {
         type: "file",
         template: "plugin-react/router/createSSRRouter.tsx",
-        params: { basename: router.basename }
+        params: { basename: router.basename, RemoteAppLoader: ssrCompose ? `import { RemoteAppLoader } from "../../ssr-compose/components/RemoteAppLoader"\nregistryHook("RemoteAppLoader", RemoteAppLoader)` : "" }
       },
       { type: "file", template: "plugin-react/ssr/SSRContext.ts", params: {} },
       {
@@ -71,31 +64,19 @@ export async function pluginInitFile(
       }
     ]
 
-    pendingPromises.push(
-      ...ssrConfigs.map(async f =>
-        fileManager.add(
-          f.type as "file",
-          f.outFile ?? f.template,
-          await renderTemplate(f.template, f.params)
-        )
-      )
-    )
+    pendingPromises.push(...ssrConfigs.map(async f => fileManager.add(f.type as "file", f.outFile ?? f.template, await renderTemplate(f.template, f.params))))
   }
 
   if (ssrCompose) {
     const ssrComposeConfigs = [
-      { type: "file", template: "main.ssr.compose.tsx", params: {} },
-      { type: "file", template: "ssr-compose/renderCompToString.ts", params: {} }
+      { type: "file", template: "main.ssr-compose.tsx", params: {} },
+      { type: "file", template: "ssr-compose/components/RemoteAppLoader.tsx", params: {} },
+      { type: "file", template: "ssr-compose/cacheManifest.ts", params: {} },
+      { type: "file", template: "ssr-compose/renderCompToString.tsx", params: {} },
+      { type: "file", template: "ssr-compose/ssr-compose.type.ts", params: {} },
+      { type: "file", template: "ssr-compose/SSRComposeContext.ts", params: {} }
     ]
-    pendingPromises.push(
-      ...ssrComposeConfigs.map(async (f: any) =>
-        fileManager.add(
-          f.type as "file",
-          f.outFile ?? f.template,
-          await renderTemplate(f.template, f.params)
-        )
-      )
-    )
+    pendingPromises.push(...ssrComposeConfigs.map(async (f: any) => fileManager.add(f.type as "file", f.outFile ?? f.template, await renderTemplate(f.template, f.params))))
   }
 }
 
@@ -113,8 +94,6 @@ async function common(clientRoutes: any[], param: PluginInitClientParam) {
       template: "plugin-react/utils/callWithCatch.ts",
       params: {}
     },
-    { type: "file", template: "plugin-react/utils/queryString.ts", params: {} },
-    { type: "file", template: "plugin-react/utils/type.ts", params: {} },
     {
       type: "file",
       template: "plugin-react/router/RouteContext.tsx",
@@ -139,13 +118,5 @@ async function common(clientRoutes: any[], param: PluginInitClientParam) {
     }
   ]
 
-  await Promise.all(
-    clientConfigs.map(async f =>
-      fileManager.add(
-        f.type as "file",
-        f.outFile ?? f.template,
-        await renderTemplate(f.template, f.params)
-      )
-    )
-  )
+  await Promise.all(clientConfigs.map(async f => fileManager.add(f.type as "file", f.outFile ?? f.template, await renderTemplate(f.template, f.params))))
 }

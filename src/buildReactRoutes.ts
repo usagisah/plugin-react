@@ -1,17 +1,9 @@
-import type {
-  ClientRoute,
-  ParseRouteContext,
-  ServerRoute
-} from "./plugin.type.js"
 import type { SpecialModule } from "@w-hite/album/cli"
-import { pathToRegexp } from "path-to-regexp"
 import { relative, resolve } from "path"
+import { pathToRegexp } from "path-to-regexp"
+import type { ClientRoute, ParseRouteContext, ServerRoute } from "./plugin.type.js"
 
-export async function buildReactRoutes(
-  dumpInput: string,
-  specialModule: SpecialModule[],
-  ignoreModules: RegExp[]
-) {
+export async function buildReactRoutes(dumpInput: string, specialModule: SpecialModule[], ignoreModules: RegExp[]) {
   const { clientRoutes, serverRoutes } = await walkModule(specialModule, {
     dumpInput,
     parentClientPath: "",
@@ -25,7 +17,7 @@ export async function buildReactRoutes(
 }
 
 async function walkModule(mods: SpecialModule[], ctx: ParseRouteContext) {
-  const {ignoreModules} = ctx
+  const { ignoreModules } = ctx
   let clientRoutes: ClientRoute[] = []
   let serverRoutes: ServerRoute[] = []
 
@@ -50,13 +42,8 @@ async function moduleToRoute(mod: SpecialModule, ctx: ParseRouteContext) {
     name: routeRecordName,
     path: clientCompPath,
     fullPath: connectPath(parentClientPath, clientCompPath),
-    component: `lazyLoad(() => import("${relative(
-      resolve(dumpInput, "plugin-react/router"),
-      mod.routeFilePath
-    )}"))`,
-    router: mod.router
-      ? relative(resolve(dumpInput, "plugin-react/router"), mod.router.filePath)
-      : null,
+    component: `lazyLoad(() => import("${relative(resolve(dumpInput, "plugin-react/router"), mod.routeFilePath)}"))`,
+    router: mod.router ? relative(resolve(dumpInput, "plugin-react/router"), mod.router.filePath) : null,
     children: []
   }
 
@@ -72,7 +59,7 @@ async function moduleToRoute(mod: SpecialModule, ctx: ParseRouteContext) {
   }
 
   if (mod.children.length > 0) {
-     const _res = await walkModule(mod.children, {
+    const _res = await walkModule(mod.children, {
       dumpInput,
       parentClientPath: clientRoute.fullPath,
       parentServerPath: serverRoute.fullPath,
@@ -110,9 +97,7 @@ function moveErrorToLast<T = ClientRoute | ServerRoute>(routes: T[]) {
   const errorRoutes: T[] = []
   const normalRoutes: T[] = []
   routes.forEach((r: any) => {
-    r.fullPath.startsWith("/(.*)") || r.fullPath.startsWith("/*")
-      ? errorRoutes.push(r)
-      : normalRoutes.push(r)
+    r.fullPath.startsWith("/(.*)") || r.fullPath.startsWith("/*") ? errorRoutes.push(r) : normalRoutes.push(r)
   })
   return [...normalRoutes, ...errorRoutes]
 }

@@ -8,5 +8,5 @@ export type ServerRoute = {
 }
 
 export const serverRoutes: ServerRoute[] = [
-$serverRoutesCode$
+"$serverRoutesCode$"
 ]

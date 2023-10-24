@@ -31,4 +31,15 @@ declare module "@w-hite/album" {
   }
 
   export type AppRouterFC = FC<{ Layout: FC<any>; onEnter?: GuardOnEnter }>
+
+  export type RemoteAppLoaderProps = {
+    type?: "component"
+    remote?: boolean
+    sourcePath: string
+    wrapperName?: string
+    wrapperProps?: Record<string, any>
+    [propKey: string]: any
+  }
+  
+  export type RemoteAppLoader = FC<RemoteAppLoaderProps>
 }

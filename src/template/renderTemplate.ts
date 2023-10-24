@@ -13,23 +13,17 @@ async function scanTemplates() {
   const files = await fg(cwd + "/**/*.{tsx,ts}")
   await Promise.all(
     files.map(async file => {
-      templates.set(
-        file.slice(cwd.length + 1),
-        readFileSync(file, "utf-8").replace("// @ts-nocheck", "")
-      )
+      templates.set(file.slice(cwd.length + 1), readFileSync(file, "utf-8").replace("// @ts-nocheck", ""))
     })
   )
   return templates
 }
 
-export async function renderTemplate(
-  fileName: string,
-  params: Record<string, string>
-) {
+export async function renderTemplate(fileName: string, params: Record<string, string>) {
   const temp = await templates
   let file = temp.get(fileName)
   for (const key in params) {
-    file = file.replace(`$${key}$`, params[key])
+    file = file.replace(new RegExp(`['"]\$` + key + `\$['"]`), params[key])
   }
   return file
 }

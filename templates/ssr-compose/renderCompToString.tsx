@@ -1,21 +1,13 @@
+import type { SSRComposeRenderRemoteComponentOptions, ServerDynamicData } from "@w-hite/album/ssr"
 import { renderToPipeableStream } from "react-dom/server"
 import { Writable } from "stream"
-import { SSRComposeRenderRemoteComponentOptions } from "./ssr-compose.type"
 
-export function renderComponentToString(
-  filePath: string,
-  renderOptions: SSRComposeRenderRemoteComponentOptions
-) {
+export function renderComponentToString(filePath: string, renderOptions: SSRComposeRenderRemoteComponentOptions) {
   return new Promise<{
     html: string
-    serverDynamicData: Map<string, any>
+    serverDynamicData: ServerDynamicData
   }>(async (resolve, reject) => {
-    const serverDynamicData = new Map()
-    const app = await buildRootComponent(
-      filePath,
-      serverDynamicData,
-      renderOptions
-    )
+    const { app, serverDynamicData } = await buildRootComponent(filePath, renderOptions)
 
     let html = ""
     const writeStream = new Writable({
@@ -36,22 +28,19 @@ export function renderComponentToString(
   })
 }
 
-async function buildRootComponent(
-  filePath: string,
-  serverDynamicData: Map<string, any>,
-  renderOptions: SSRComposeRenderRemoteComponentOptions
-) {
+async function buildRootComponent(filePath: string, renderOptions: SSRComposeRenderRemoteComponentOptions) {
   const { ssrContextProps, ssrComposeContextProps } = renderOptions
-  ssrContextProps.serverDynamicData = serverDynamicData
+  const serverDynamicData: ServerDynamicData = (ssrContextProps.serverDynamicData = {})
 
-  const Component: any = await import(/*@vite-ignore*/ filePath).then(
-    m => m.default
-  )
-  return (
-    <SSRContext.Provider value={ssrContextProps}>
-      <SSRComposeContext.Provider value={ssrComposeContextProps}>
-        <Component {...ssrComposeContextProps.props} />
-      </SSRComposeContext.Provider>
-    </SSRContext.Provider>
-  )
+  const Component: any = await import(/*@vite-ignore*/ filePath).then(m => m.default)
+  return {
+    app: (
+      <SSRContext.Provider value={ssrContextProps}>
+        <SSRComposeContext.Provider value={ssrComposeContextProps}>
+          <Component {...ssrComposeContextProps.props} />
+        </SSRComposeContext.Provider>
+      </SSRContext.Provider>
+    ),
+    serverDynamicData
+  }
 }

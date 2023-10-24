@@ -9,10 +9,7 @@ let staticInfo: {
   mainEntryPath: string
 }
 
-export function buildStaticInfo(
-  options: AlbumSSROptions,
-  context: AlbumSSRContext
-) {
+export function buildStaticInfo(options: AlbumSSROptions, context: AlbumSSRContext) {
   if (staticInfo) return staticInfo
   const { mode, outputs } = context
   const { clientOutDir } = outputs
@@ -42,8 +39,7 @@ export function buildStaticInfo(
           <script
             type="module"
             dangerouslySetInnerHTML={{
-              __html:
-                'import { injectIntoGlobalHook } from "/@react-refresh";injectIntoGlobalHook(window);window.$RefreshReg$ = () => {};window.$RefreshSig$ = () => (type) => type;'
+              __html: 'import { injectIntoGlobalHook } from "/@react-refresh";injectIntoGlobalHook(window);window.$RefreshReg$ = () => {};window.$RefreshSig$ = () => (type) => type;'
             }}
           ></script>
           <script type="module" src="/@vite/client"></script>

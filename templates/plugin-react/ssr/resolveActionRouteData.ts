@@ -1,13 +1,10 @@
 import type { AlbumSSRContext, AlbumSSRContextProps } from "@w-hite/album/ssr"
+import { queryString } from "@w-hite/album/utils/common/queryString"
+import { isPlainObject } from "@w-hite/album/utils/utils"
 import { matchPath } from "react-router-dom"
 import { serverRoutes } from "../router/routes.ssr"
-import { queryString } from "../utils/queryString"
-import { isPlainObject } from "../utils/type"
 
-export async function resolveActionRouteData(
-  { ssrSlideProps }: AlbumSSRContextProps,
-  { logger }: AlbumSSRContext
-) {
+export async function resolveActionRouteData({ ssrSlideProps }: AlbumSSRContextProps, { logger }: AlbumSSRContext) {
   let actionData: any = {}
 
   const { url } = ssrSlideProps.req
@@ -27,10 +24,7 @@ export async function resolveActionRouteData(
       try {
         const mod: any = await route.actionFactory()
         if (!mod || !(typeof mod.default === "function")) {
-          throw (
-            "router-action export default is not a function at " +
-            route.actionPath
-          )
+          throw "router-action export default is not a function at " + route.actionPath
         }
 
         actionData = await mod.default(ssrSlideProps)

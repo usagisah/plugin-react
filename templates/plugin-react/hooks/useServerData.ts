@@ -15,8 +15,8 @@ export function useServerData(id: string, fn: any) {
       throw new Error(msg)
     }
 
-    if (serverDynamicData.has(id)) {
-      return serverDynamicData.get(id)
+    if (Reflect.has(serverDynamicData, id)) {
+      return serverDynamicData[id]
     }
 
     throw new Promise(async resolve => {
@@ -26,7 +26,7 @@ export function useServerData(id: string, fn: any) {
       } catch (e: any) {
         logger.error(e, "useServerData")
       } finally {
-        serverDynamicData.set(id, res)
+        serverDynamicData[id] = res
         resolve(null)
       }
     })

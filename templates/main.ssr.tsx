@@ -1,30 +1,19 @@
-import type {
-  AlbumSSRContext,
-  AlbumSSROptions,
-  AlbumSSRContextProps
-} from "@w-hite/album/ssr"
-import { createSSRRouter } from "./plugin-react/router/createSSRRouter"
+import userSsrEntry from "'$mainServerPath$'"
+import type { AlbumSSRRenderOptions } from "@w-hite/album/modules/ssr/ssr.type"
+import type { AlbumSSRContextProps, SSRComposeContextProps } from "@w-hite/album/ssr"
+import { isPlainObject } from "@w-hite/album/utils/utils"
 import { renderToPipeableStream } from "react-dom/server"
-import { isPlainObject } from "./plugin-react/utils/type"
+import { renderRemoteComponent as _renderRemoteComponent } from "./main.ssr-compose"
+import { createSSRRouter } from "./plugin-react/router/createSSRRouter"
 import { SSRContext } from "./plugin-react/ssr/SSRContext"
-import { resolveActionRouteData } from "./plugin-react/ssr/resolveActionRouteData"
 import { buildStaticInfo } from "./plugin-react/ssr/buildStaticInfo"
-import { renderRemoteComponent as _renderRemoteComponent } from "./main.ssr.compose"
-import userSsrEntry from "$mainServerPath$"
+import { resolveActionRouteData } from "./plugin-react/ssr/resolveActionRouteData"
 import { SSRComposeContext } from "./ssr-compose/SSRComposeContext"
-import {
-  SSRComposeContextProps,
-  SSRComposeOptions
-} from "./ssr-compose/ssr-compose.type"
 
-export default async function ssrEntry(
-  options: AlbumSSROptions,
-  context: AlbumSSRContext,
-  composeOptions: SSRComposeOptions
-) {
-  const { req, res, headers } = options
-  const { logger, inputs, mode, meta, outputs, serverMode, ssrCompose } =
-    context
+export default async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
+  const { context, ssrOptions, ssrComposeOptions } = renderOptions
+  const { req, res, headers } = ssrOptions
+  const { logger, inputs, mode, meta, outputs, serverMode } = context
   const ssrContextProps: AlbumSSRContextProps = {
     ssrSlideProps: {
       req,
@@ -39,13 +28,13 @@ export default async function ssrEntry(
       params: {}
     },
     serverRouteData: {},
-    serverDynamicData: new Map()
+    serverDynamicData: {}
   }
 
   let ssrComposeContextProps: SSRComposeContextProps | null = null
   {
-    if (composeOptions) {
-      function renderRemoteComponent (renderProps: any){
+    if (ssrComposeOptions) {
+      function renderRemoteComponent(renderProps: any) {
         return _renderRemoteComponent({
           renderProps,
           ssrContextProps,
@@ -55,20 +44,13 @@ export default async function ssrEntry(
       ssrComposeContextProps = {
         sources: {},
         renderRemoteComponent,
-        ssrComposeOptions: composeOptions
+        ssrComposeOptions
       } as SSRComposeContextProps
     }
   }
 
   const actionData = await resolveActionRouteData(ssrContextProps, context)
-  const {
-    App = null,
-    Head = null,
-    data
-  } = await (userSsrEntry as any)(
-    createSSRRouter(req.url),
-    ssrContextProps.ssrSlideProps
-  )
+  const { App = null, Head = null, data } = await (userSsrEntry as any)(createSSRRouter(req.url), ssrContextProps.ssrSlideProps)
   const serverRouteData = (ssrContextProps["serverRouteData"] = {
     ...actionData,
     ...(isPlainObject(data) ? data : {})
@@ -87,11 +69,7 @@ export default async function ssrEntry(
   {
     app = <SSRContext.Provider>{app}</SSRContext.Provider>
     if (ssrComposeContextProps) {
-      app = (
-        <SSRComposeContext.Provider value={ssrComposeContextProps}>
-          {app}
-        </SSRComposeContext.Provider>
-      )
+      app = <SSRComposeContext.Provider value={ssrComposeContextProps}>{app}</SSRComposeContext.Provider>
     }
   }
   const { pipe } = renderToPipeableStream(app, {
@@ -100,24 +78,21 @@ export default async function ssrEntry(
       pipe(res)
     },
     onAllReady() {
-      serverDynamicData.forEach((value: any, id: string) => {
+      for (const id of Object.getOwnPropertyNames(serverDynamicData)) {
+        const value = serverDynamicData[id]
         try {
-          res.write(
-            `<script type="text/json" id="server-data-${id}">${JSON.stringify(
-              value
-            )}</script>`
-          )
+          res.write(`<script type="text/json" id="server-data-${id}">${JSON.stringify(value)}</script>`)
         } catch {
-          logger.error("server data must be serializable to JSON.stringify")
+          logger.error("server-data 必须能够被 JSON.stringify 序列化", "失败信息", { id: value }, "ssrRender")
         }
-      })
+      }
 
       if (Object.keys(serverRouteData).length > 0) {
-        res.write(
-          `<script type="text/json" id="server-router-data">${JSON.stringify(
-            serverRouteData
-          )}</script>`
-        )
+        try {
+          res.write(`<script type="text/json" id="server-router-data">${JSON.stringify(serverRouteData)}</script>`)
+        } catch {
+          logger.error("server-router-data 必须能够被 JSON.stringify 序列化", "失败信息", serverRouteData, "ssrRender")
+        }
       }
 
       if (ssrComposeContextProps) {
@@ -133,8 +108,8 @@ export default async function ssrEntry(
           source.assets.css.forEach(css => {
             res.write(`<link rel="stylesheet" href="${css}">`)
           })
-          
-          promisesTemp += `import("${source.httpPath}"),`
+
+          promisesTemp += `import("${source.importPath}"),`
           mapTemp += `["${sourcePath}", map[${index}].default],`
           index++
         }
@@ -142,7 +117,7 @@ export default async function ssrEntry(
         res.write(`<script type="module">const map = await Promise.all([${promisesTemp}]);window.__$_album_ssr_compose_remote_map = new Map([${mapTemp};</script>`)
       }
 
-      res.write(`<script type="module" src="${mainEntryPath}"></script>`)
+      // res.write(`<script type="module" src="${mainEntryPath}"></script>`)
     }
   })
 }
