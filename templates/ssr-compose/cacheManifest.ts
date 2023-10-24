@@ -8,11 +8,11 @@ const cachePath = resolve(__dirname, ".cache")
 
 export function checkCacheChange(cacheInfo: SSRComposeCache) {
   if (!cacheInfo) return true
-  return statSync(cacheInfo.originFilePath).atimeMs > cacheInfo.lastChange
+  return statSync(cacheInfo.filePath).atimeMs > cacheInfo.lastChange
 }
 
 export async function loadCacheManifest() {
-  const cacheManifestPath = resolve(cachePath, "ssr.compose.json")
+  const cacheManifestPath = resolve(cachePath, "ssr-compose.json")
   if (!existsSync(cacheManifestPath)) return null
 
   try {
@@ -32,22 +32,18 @@ type FlushCacheManifestProps = {
 export async function flushCacheManifest(props: FlushCacheManifestProps) {
   const { cacheManifest, sourcePath, input, outDir } = props
   const manifest = JSON.parse(readFileSync(resolve(outDir, "manifest.json"), "utf-8"))
+  const cwd = process.cwd()
   const cache: SSRComposeCache = {
     lastChange: statSync(input).atimeMs,
-    originFilePath: input,
-    filePath: "",
-    importPath: "",
+    filePath: input,
+    importPath: input.slice(cwd.length),
     assets: {
       css: []
     }
   }
-  const cwd = process.cwd()
   for (const key of Object.getOwnPropertyNames(manifest)) {
     const value = manifest[key]
-    if (value.isEntry) {
-      cache.filePath = resolve(outDir, value.file)
-      cache.importPath = cache.filePath.slice(cwd.length)
-    } else if (value.file.endsWith(".css")) {
+    if (value.file.endsWith(".css")) {
       cache.assets.css.push(resolve(outDir, value.file).slice(cwd.length))
     }
   }
@@ -55,6 +51,6 @@ export async function flushCacheManifest(props: FlushCacheManifestProps) {
   let _cacheManifest = cacheManifest
   if (_cacheManifest) _cacheManifest[sourcePath] = cache
   else _cacheManifest = { [sourcePath]: cache }
-  writeFileSync(resolve(cachePath, "ssr.compose.json"), JSON.stringify(_cacheManifest, null, 2), "utf-8")
+  writeFileSync(resolve(cachePath, "ssr-compose.json"), JSON.stringify(_cacheManifest, null, 2), "utf-8")
   return _cacheManifest
 }

@@ -23,7 +23,8 @@ export async function renderTemplate(fileName: string, params: Record<string, st
   const temp = await templates
   let file = temp.get(fileName)
   for (const key in params) {
-    file = file.replace(new RegExp(`['"]\$` + key + `\$['"]`), params[key])
+    const reg = new RegExp(`(['"])\\$` + key + `\\$\\1`)
+    file = file.replace(reg, params[key])
   }
   return file
 }

@@ -1,6 +1,5 @@
 export type SSRComposeCache = {
   lastChange: number
-  originFilePath: string
   filePath: string
   importPath: string
   assets: {

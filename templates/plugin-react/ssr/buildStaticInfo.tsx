@@ -1,5 +1,5 @@
 // @ts-nocheck
-import { AlbumSSRContext, AlbumSSROptions } from "@w-hite/album/ssr"
+import { AlbumSSRRenderOptions } from "@w-hite/album/ssr"
 import { readFileSync } from "fs"
 import { resolve } from "path"
 
@@ -9,8 +9,9 @@ let staticInfo: {
   mainEntryPath: string
 }
 
-export function buildStaticInfo(options: AlbumSSROptions, context: AlbumSSRContext) {
+export function buildStaticInfo(renderOptions: AlbumSSRRenderOptions) {
   if (staticInfo) return staticInfo
+  const { context } = renderOptions
   const { mode, outputs } = context
   const { clientOutDir } = outputs
 

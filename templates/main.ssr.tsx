@@ -1,6 +1,5 @@
 import userSsrEntry from "'$mainServerPath$'"
-import type { AlbumSSRRenderOptions } from "@w-hite/album/modules/ssr/ssr.type"
-import type { AlbumSSRContextProps, SSRComposeContextProps } from "@w-hite/album/ssr"
+import type { AlbumSSRContextProps, AlbumSSRRenderOptions, SSRComposeContextProps } from "@w-hite/album/ssr"
 import { isPlainObject } from "@w-hite/album/utils/utils"
 import { renderToPipeableStream } from "react-dom/server"
 import { renderRemoteComponent as _renderRemoteComponent } from "./main.ssr-compose"
@@ -56,7 +55,7 @@ export default async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
     ...(isPlainObject(data) ? data : {})
   })
   const serverDynamicData = ssrContextProps.serverDynamicData
-  const { PreRender, mainEntryPath } = buildStaticInfo(options, context)
+  const { PreRender, mainEntryPath } = buildStaticInfo(renderOptions)
   let app = (
     <html lang="en">
       <head>
@@ -67,7 +66,7 @@ export default async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
     </html>
   )
   {
-    app = <SSRContext.Provider>{app}</SSRContext.Provider>
+    app = <SSRContext.Provider value={ssrContextProps}>{app}</SSRContext.Provider>
     if (ssrComposeContextProps) {
       app = <SSRComposeContext.Provider value={ssrComposeContextProps}>{app}</SSRComposeContext.Provider>
     }

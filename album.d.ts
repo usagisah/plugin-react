@@ -1,19 +1,14 @@
 import "@w-hite/album"
 import { ReactNode } from "react"
-import { NavigateFunction, Location } from "react-router-dom"
+import { Location, NavigateFunction } from "react-router-dom"
 
 declare module "@w-hite/album" {
   export type FC<P = {}> = {
-    (props: P & { children?: ReactNode; [key: string]: any }, context?: any):
-      | ReactNode
-      | JSX.Element
+    (props: P & { children?: ReactNode; [key: string]: any }, context?: any): ReactNode | JSX.Element
     [key: string]: any
   }
 
-  export type GuardOnEnter = (
-    params: LocalData,
-    navigate: NavigateFunction
-  ) => any
+  export type GuardOnEnter = (params: LocalData, navigate: NavigateFunction) => any
 
   export type GuardLoader = (local: LocalData) => any
 
@@ -40,6 +35,9 @@ declare module "@w-hite/album" {
     wrapperProps?: Record<string, any>
     [propKey: string]: any
   }
-  
-  export type RemoteAppLoader = FC<RemoteAppLoaderProps>
+
+  export interface ComponentRemoteAppLoader {
+    (props: RemoteAppLoaderProps & { children?: ReactNode; [key: string]: any }, context?: any): ReactNode | JSX.Element
+    [key: string]: any
+  }
 }
