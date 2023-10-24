@@ -8,6 +8,7 @@ import { SSRContext } from "./plugin-react/ssr/SSRContext"
 import { buildStaticInfo } from "./plugin-react/ssr/buildStaticInfo"
 import { resolveActionRouteData } from "./plugin-react/ssr/resolveActionRouteData"
 import { SSRComposeContext } from "./ssr-compose/SSRComposeContext"
+import { relative, resolve } from "path"
 
 export default async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
   const { context, ssrOptions, ssrComposeOptions } = renderOptions
@@ -95,6 +96,8 @@ export default async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
       }
 
       if (ssrComposeContextProps) {
+        const ssrComposeInjectScriptPath = relative(inputs.cwd, resolve(inputs.dumpInput, "ssr-compose/browser.ts"))
+        let script = ['<script type="module">', `await import("/${ssrComposeInjectScriptPath}");\n`, "", '</script>'] 
         let promisesTemp = ""
         let mapTemp = ""
         let index = 0
@@ -105,7 +108,7 @@ export default async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
           if (source === false) continue
 
           source.assets.css.forEach(css => {
-            res.write(`<link rel="stylesheet" href="${css}">`)
+            res.write(`<link rel="stylesheet" href="${css}" />`)
           })
 
           promisesTemp += `import("${source.importPath}"),`
@@ -113,10 +116,13 @@ export default async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
           index++
         }
 
-        res.write(`<script type="module">const map = await Promise.all([${promisesTemp}]);window.__$_album_ssr_compose_remote_map = new Map([${mapTemp};</script>`)
+        if (index > 0) {
+          script[2] = `const map = await Promise.all([${promisesTemp}]);\nwindow.__$_album_ssr_compose.sources = new Map([${mapTemp}]);`
+        }
+        res.write(script.join(""))
       }
 
-      // res.write(`<script type="module" src="${mainEntryPath}"></script>`)
+      res.write(`<script type="module" src="${mainEntryPath}"></script>`)
     }
   })
 }

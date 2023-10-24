@@ -1,6 +1,6 @@
 import type { SSRComposeRenderRemoteComponentOptions, SSRComposeRenderRemoteComponentReturn, SSRComposeRenderProps } from "@w-hite/album/ssr"
 import { createModulePath } from "@w-hite/album/utils/modules/createModulePath"
-import { registryHook } from "@w-hite/album"
+import { registryHookIfAbsent } from "@w-hite/album"
 import { createHash } from "crypto"
 import { existsSync } from "fs"
 import { resolve } from "path"
@@ -11,12 +11,12 @@ import { useServer } from "./plugin-react/hooks/useServer"
 import { useServerData } from "./plugin-react/hooks/useServerData"
 import { useServerRouteData } from "./plugin-react/hooks/useServerRouteData"
 import { createRemoteAppLoader } from "./ssr-compose/components/RemoteAppLoader"
-registryHook("useServer", useServer)
-registryHook("useServerData", useServerData)
-registryHook("useServerRouteData", useServerRouteData)
-registryHook("useRoutes", () => [])
-registryHook("useRoutesMap", () => new Map())
-registryHook("createRemoteAppLoader", createRemoteAppLoader)
+registryHookIfAbsent("useServer", useServer)
+registryHookIfAbsent("useServerData", useServerData)
+registryHookIfAbsent("useServerRouteData", useServerRouteData)
+registryHookIfAbsent("useRoutes", () => [])
+registryHookIfAbsent("useRoutesMap", () => new Map())
+registryHookIfAbsent("createRemoteAppLoader", createRemoteAppLoader)
 
 const { __dirname } = createModulePath(import.meta.url)
 const cachePath = resolve(__dirname, "ssr-compose/.cache")

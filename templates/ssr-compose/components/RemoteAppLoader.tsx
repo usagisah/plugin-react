@@ -98,7 +98,22 @@ export function createRemoteAppLoader(props: { remote: boolean; url: string }) {
       })
     }
 
-    return null
+    const w: any = globalThis.window
+    if (!w["__$_album_ssr_compose"]) {
+      const messages = "客户端无法找预加载的资源，请检查服务器配置是否存在问题"
+      console.error("[error]", "ssr-compose -> ", messages)
+      throw messages
+    }
+
+    const Component = w["__$_album_ssr_compose"].sources.get(_sourcePath)
+    if (!Component) {
+      console.error("[error]", "ssr-compose -> ", `无法找到匹配的资源（${sourcePath}），请检查服务器数据拉取是否存在问题`)
+      return null
+    }
+    return createElement(isString(wrapperName) && wrapperName.length > 0 ? wrapperName : "div", {
+      ...(isPlainObject(wrapperProps) ? wrapperProps : {}),
+      children: <Component {...props} />
+    })
   }
   return RemoteAppLoader
 }
