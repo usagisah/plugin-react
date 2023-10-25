@@ -97,7 +97,9 @@ export default async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
 
       if (ssrComposeContextProps) {
         const ssrComposeInjectScriptPath = relative(inputs.cwd, resolve(inputs.dumpInput, "ssr-compose/browser.ts"))
-        let script = ['<script type="module">', `await import("/${ssrComposeInjectScriptPath}");\n`, "", '</script>'] 
+        res.write(`<script type="module" src="${ssrComposeInjectScriptPath}"></script>`)
+        
+        let script = ['<script type="module">', "", '</script>'] 
         let promisesTemp = ""
         let mapTemp = ""
         let index = 0
@@ -117,7 +119,7 @@ export default async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
         }
 
         if (index > 0) {
-          script[2] = `const map = await Promise.all([${promisesTemp}]);\nwindow.__$_album_ssr_compose.sources = new Map([${mapTemp}]);`
+          script[1] = `const map = await Promise.all([${promisesTemp}]);\nwindow.__$_album_ssr_compose.sources = new Map([${mapTemp}]);`
         }
         res.write(script.join(""))
       }
