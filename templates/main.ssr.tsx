@@ -14,8 +14,10 @@ export default async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
   const { context, ssrOptions, ssrComposeOptions } = renderOptions
   const { req, res, headers } = ssrOptions
   const { logger, inputs, mode, meta, outputs, serverMode } = context
+  const pathname = (req as any).albumOptions.pathname
   const ssrContextProps: AlbumSSRContextProps = {
     ssrSlideProps: {
+      pathname,
       req,
       headers,
       mode,
@@ -50,7 +52,7 @@ export default async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
   }
 
   const actionData = await resolveActionRouteData(ssrContextProps, context)
-  const { App = null, Head = null, data } = await (userSsrEntry as any)(createSSRRouter(req.url), ssrContextProps.ssrSlideProps)
+  const { App = null, Head = null, data } = await (userSsrEntry as any)(createSSRRouter(pathname), ssrContextProps.ssrSlideProps)
   const serverRouteData = (ssrContextProps["serverRouteData"] = {
     ...actionData,
     ...(isPlainObject(data) ? data : {})

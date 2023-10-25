@@ -1,5 +1,5 @@
 import type { PluginInitClientParam } from "@w-hite/album/cli"
-import { basename, relative, resolve } from "path"
+import { relative, resolve } from "path"
 import { buildMainParams } from "./buildParams/buildMainParams.js"
 import { buildRoutesParams } from "./buildParams/buildRoutesParams.js"
 import { buildRoutesSSRParams } from "./buildParams/buildRoutesSSRParams.js"
@@ -8,23 +8,18 @@ import { renderTemplate } from "./template/renderTemplate.js"
 
 export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: ServerRoute[], param: PluginInitClientParam) {
   const pendingPromises: Promise<any>[] = []
-  const {
-    fileManager,
-    inputs: { dumpInput, ssrInput },
-    status: { ssr },
-    clientConfig: { router },
-    ssrCompose
-  } = param
+  const { fileManager, ssrCompose } = param
+  const { dumpInput, ssrInput } = param.inputs
+  const { ssr } = param.status
+  const { router } = param.clientConfig
 
   pendingPromises.push(common(clientRoutes, param))
 
   if (ssr) {
-    const serverEntryName = basename(ssrInput)
     const ssrConfigs = [
       {
         type: "file",
         template: "main.ssr.tsx",
-        outFile: serverEntryName,
         params: {
           mainEntryPath: relative(process.cwd(), resolve(dumpInput, "main.tsx")),
           mainServerPath: relative(dumpInput, ssrInput)
@@ -64,7 +59,7 @@ export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: 
       }
     ]
 
-    pendingPromises.push(...ssrConfigs.map(async f => fileManager.add(f.type as "file", f.outFile ?? f.template, await renderTemplate(f.template, f.params))))
+    pendingPromises.push(...ssrConfigs.map(async f => fileManager.add(f.type as "file", f.template, await renderTemplate(f.template, f.params))))
   }
 
   if (ssrCompose) {
@@ -77,16 +72,12 @@ export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: 
       { type: "file", template: "ssr-compose/ssr-compose.type.ts", params: {} },
       { type: "file", template: "ssr-compose/SSRComposeContext.ts", params: {} }
     ]
-    pendingPromises.push(...ssrComposeConfigs.map(async (f: any) => fileManager.add(f.type as "file", f.outFile ?? f.template, await renderTemplate(f.template, f.params))))
+    pendingPromises.push(...ssrComposeConfigs.map(async (f: any) => fileManager.add(f.type as "file", f.template, await renderTemplate(f.template, f.params))))
   }
 }
 
 async function common(clientRoutes: any[], param: PluginInitClientParam) {
-  const {
-    fileManager,
-    inputs: { clientInput }
-  } = param
-  const clientEntryName = basename(clientInput)
+  const { fileManager } = param
   const clientConfigs = [
     { type: "file", template: "plugin-react/hooks/useLoader.ts", params: {} },
     { type: "file", template: "plugin-react/hooks/useRouter.ts", params: {} },
@@ -114,10 +105,9 @@ async function common(clientRoutes: any[], param: PluginInitClientParam) {
     {
       type: "file",
       template: "main.tsx",
-      outFile: clientEntryName,
       params: buildMainParams(param)
     }
   ]
 
-  await Promise.all(clientConfigs.map(async f => fileManager.add(f.type as "file", f.outFile ?? f.template, await renderTemplate(f.template, f.params))))
+  await Promise.all(clientConfigs.map(async f => fileManager.add(f.type as "file", f.template, await renderTemplate(f.template, f.params))))
 }

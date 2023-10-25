@@ -1,8 +1,7 @@
 import viteReactPlugin from "@vitejs/plugin-react-swc"
-import type { UserPlugins } from "@w-hite/album/cli"
+import type { UserPlugins, ViteConfigs } from "@w-hite/album/cli"
 import { findEntryPath } from "@w-hite/album/utils/utils"
 import { basename, resolve } from "path"
-import { UserConfig } from "vite"
 import { IgnoreModules, buildIgnoreModules } from "./buildIgnoreModules.js"
 import { buildReactRoutes } from "./buildReactRoutes.js"
 import { pluginInitFile } from "./plugin_initFile.js"
@@ -55,9 +54,9 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
       const { result, inputs, status, specialModules, ssrCompose } = param
       const { clientRoutes, serverRoutes } = await buildReactRoutes(inputs.dumpInput, specialModules, _ignoreModules)
       await pluginInitFile(clientRoutes, serverRoutes, param)
-      result.realClientInput = resolve(inputs.dumpInput, basename(inputs.clientInput))
+      result.realClientInput = resolve(inputs.dumpInput, "main.tsx")
       if (status.ssr) {
-        result.realSSRInput = resolve(inputs.dumpInput, basename(inputs.ssrInput))
+        result.realSSRInput = resolve(inputs.dumpInput, "main.ssr.tsx")
       }
       if (ssrCompose) {
         result.realSSRComposeInput = resolve(inputs.dumpInput, "main.ssr-compose.tsx")
@@ -69,13 +68,13 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
       await pluginPatchFile(clientRoutes, serverRoutes, param)
     },
     async serverConfig(props) {
-      const options: UserConfig = {
-        plugins: [viteReactPlugin(pluginReact)]
-      }
-      props.viteConfigs.push({
+      const config: ViteConfigs = {
         name: "plugin-react",
-        options
-      } as any)
+        options: {
+          plugins: [viteReactPlugin(pluginReact) as any]
+        }
+      }
+      props.viteConfigs.push(config)
     }
   }
 }
