@@ -1,4 +1,3 @@
-// @ts-nocheck
 import { registryHook } from "@w-hite/album"
 import { Fragment } from "react"
 import { StaticRouter } from "react-router-dom/server"

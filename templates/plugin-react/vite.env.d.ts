@@ -1,0 +1,1 @@
+/// <reference types="@w-hite/album/types/vite-client" />

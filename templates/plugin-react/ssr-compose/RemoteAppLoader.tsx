@@ -2,7 +2,7 @@ import type { SSRComposeRenderRemoteComponentReturn } from "@w-hite/album/ssr"
 import { isPlainObject, isString } from "@w-hite/album/utils/check/check"
 import { createElement, useContext } from "react"
 import { SSRContext } from "../../plugin-react/ssr/SSRContext"
-import { SSRComposeContext } from "../SSRComposeContext"
+import { SSRComposeContext } from "./SSRComposeContext"
 
 type RemoteAppLoaderProps = {
   sourcePath: string

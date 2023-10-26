@@ -1,4 +1,4 @@
-// @ts-nocheck
+
 import type { AppRouterFC } from "@w-hite/album"
 import { registryHook } from "@w-hite/album"
 import { Fragment } from "react"
@@ -15,7 +15,7 @@ registryHook("useLoader", useLoader)
 "$ssr_hooks_registry$"
 
 "$RemoteAppLoader$"
-
+// @ts-ignore
 import mainFactory from "'$mainPath$'"
 
 const AppRouterComponent: AppRouterFC = ({ Layout = Fragment, ...props }) => (

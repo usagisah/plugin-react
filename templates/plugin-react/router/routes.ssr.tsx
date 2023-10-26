@@ -1,4 +1,3 @@
-// @ts-nocheck
 export type ServerRoute = {
   name: string
   reg: RegExp
@@ -8,5 +7,6 @@ export type ServerRoute = {
 }
 
 export const serverRoutes: ServerRoute[] = [
+  // @ts-ignore
 "$serverRoutesCode$"
 ]

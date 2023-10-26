@@ -1,22 +1,10 @@
 import type { SSRComposeRenderRemoteComponentOptions, SSRComposeRenderRemoteComponentReturn, SSRComposeRenderProps } from "@w-hite/album/ssr"
 import { createModulePath } from "@w-hite/album/utils/modules/createModulePath"
-import { registryHookIfAbsent } from "@w-hite/album"
 import { createHash } from "crypto"
 import { existsSync } from "fs"
 import { resolve } from "path"
-import { checkCacheChange, flushCacheManifest, loadCacheManifest } from "./ssr-compose/cacheManifest"
-import { renderComponentToString } from "./ssr-compose/renderCompToString"
-
-import { useServer } from "./plugin-react/hooks/useServer"
-import { useServerData } from "./plugin-react/hooks/useServerData"
-import { useServerRouteData } from "./plugin-react/hooks/useServerRouteData"
-import { createRemoteAppLoader } from "./ssr-compose/components/RemoteAppLoader"
-registryHookIfAbsent("useServer", useServer)
-registryHookIfAbsent("useServerData", useServerData)
-registryHookIfAbsent("useServerRouteData", useServerRouteData)
-registryHookIfAbsent("useRoutes", () => [])
-registryHookIfAbsent("useRoutesMap", () => new Map())
-registryHookIfAbsent("createRemoteAppLoader", createRemoteAppLoader)
+import { checkCacheChange, flushCacheManifest, loadCacheManifest } from "./cacheManifest"
+import { renderComponentToString } from "./renderCompToString"
 
 const { __dirname } = createModulePath(import.meta.url)
 const cachePath = resolve(__dirname, "ssr-compose/.cache")
@@ -31,7 +19,7 @@ export async function renderRemoteComponent(renderOptions: SSRComposeRenderRemot
     throw "资源不存在"
   }
 
-  let cacheManifest = await loadCacheManifest()
+  let cacheManifest = await loadCacheManifest(renderOptions)
   if (!cacheManifest || !cacheManifest[sourcePath] || checkCacheChange(cacheManifest[sourcePath])) {
     const outDirName = createHash("md5").update(sourcePath).digest("hex")
     const outDir = resolve(cachePath, outDirName)

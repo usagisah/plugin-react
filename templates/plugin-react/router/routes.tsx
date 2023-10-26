@@ -1,4 +1,3 @@
-// @ts-nocheck
 import type { GuardOnEnter, FC, RouterRoute } from "@w-hite/album"
 import { Routes, Route } from "react-router-dom";
 import { GuardRoute } from "./GuardRoute"
@@ -8,7 +7,7 @@ import { lazyLoad } from "./lazyLoad"
 type Props = {
   onEnter?: GuardOnEnter
 }
-
+// @ts-ignore
 "$str_defines$"
 
 export const routes = "$str_useRoutes$"
@@ -27,6 +26,6 @@ const nextRoute = (parent: any, routes: any[], props: any) => {
   })
 }
 
-export const AppRoutes: FC<Props> = props => {
+export const AppRoutes: FC<Props> = props => {// @ts-ignore
   return <Routes>{nextRoute(null, routes, props)}</Routes>
 }

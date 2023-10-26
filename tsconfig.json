@@ -17,13 +17,17 @@
     "strictNullChecks": false,
     "noImplicitAny": true,
     "skipDefaultLibCheck": true,
-    "resolveJsonModule": true,
-    "jsx": "react-jsx"
+    "resolveJsonModule": true
   },
   "include": [
     "src/**/*.ts"
   ],
   "exclude": [
     "node_modules"
+  ],
+  "references": [
+    {
+      "path": "./tsconfig.templates.json"
+    }
   ]
 }
