@@ -2,7 +2,7 @@ import type { AlbumContext, PluginViteConfig, UserPlugins } from "@w-hite/album/
 
 import viteReactPlugin from "@vitejs/plugin-react-swc"
 import { findEntryPath } from "@w-hite/album/utils/utils"
-import { readFileSync, writeFileSync } from "fs"
+import { existsSync, mkdirSync, readFileSync, writeFileSync } from "fs"
 import { basename, resolve } from "path"
 import { build as viteBuild } from "vite"
 import { IgnoreModules, buildIgnoreModules } from "./buildIgnoreModules.js"
@@ -76,6 +76,9 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
       const config: PluginViteConfig = {
         name: "plugin-react",
         options: {
+          build: {
+            emptyOutDir: false
+          },
           plugins: [
             viteReactPlugin(pluginReact) as any,
             {
@@ -89,33 +92,39 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
                   const { ssrComposeModuleRootInput, cwd, dumpInput } = albumContext.inputs
                   if (!ssrComposeModuleRootInput) return
 
+                  albumContext.logger.log("正在打包 ssr-compose 附带文件", "ssr-compose")
                   const { clientOutDir, ssrOutDir } = albumContext.outputs
                   const manifest = JSON.parse(readFileSync(resolve(clientOutDir, "manifest.json"), "utf-8"))
                   const moduleRoot = ssrComposeModuleRootInput.slice(cwd.length + 1)
                   const _coordinate: Record<string, string> = {}
                   for (const key of Object.getOwnPropertyNames(manifest)) {
                     if (key.startsWith(moduleRoot) && (key.endsWith(".tsx") || key.endsWith(".ts"))) {
-                      _coordinate[key.slice(moduleRoot.length)] = key
+                      _coordinate[key.slice(moduleRoot.length + 1)] = key
                     }
                   }
+
+                  if (!existsSync(ssrOutDir)) mkdirSync(ssrOutDir, { recursive: true })
                   writeFileSync(resolve(ssrOutDir, "coordinate.json"), JSON.stringify(_coordinate), "utf-8")
 
-                  albumContext.logger.log("正在打包 ssr-compose 附带文件", "plugin-react")
+                  console.log(resolve(dumpInput, "plugin-react/ssr-compose/browser.ts"))
+                  console.log(ssrOutDir)
                   await viteBuild({
                     plugins: [viteReactPlugin(pluginReact)],
                     logLevel: "error",
                     build: {
-                      minify: true,
+                      reportCompressedSize: false,
                       rollupOptions: {
                         input: resolve(dumpInput, "plugin-react/ssr-compose/browser.ts"),
                         output: {
-                          file: resolve(ssrOutDir, "browser.js"),
-                          format: "es"
+                          entryFileNames: `[name].js`
                         }
                       },
-                      emptyOutDir: false
+                      emptyOutDir: false,
+                      outDir: ssrOutDir
                     }
                   })
+                  albumContext.logger.log("success", "ssr-compose")
+                  console.log("\n\n")
                 }
               }
             }
