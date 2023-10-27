@@ -87,7 +87,7 @@ export function createRemoteAppLoader(props: { remote: boolean; url: string }) {
           _source.cache[_props] = { html: res.html }
           resolve()
         } catch (e) {
-          logger.error(`拉取资源过程出现错误，相关所有操作已被迫中断，回退到 null`, "失败的资源信息:", { sourcePath, props }, "错误信息:", e, "ssr-compose")
+          logger.error(`拉取资源过程出现错误，相关所有操作已被迫中断，回退到 null`, "失败的资源信息:", JSON.stringify({ sourcePath, props }), "错误信息:", e, "ssr-compose")
           if (!_source) {
             _source = sources[_sourcePath] = false
           } else {

@@ -1,20 +1,20 @@
 // @ts-ignore
 import userSsrEntry from "'$mainServerPath$'"
 import type { AlbumSSRContextProps, AlbumSSRRenderOptions, SSRComposeContextProps } from "@w-hite/album/ssr"
-import { SSRServerContext } from "./SSRServerContext"
 import { isPlainObject } from "@w-hite/album/utils/utils"
 import { renderToPipeableStream } from "react-dom/server"
-import { renderRemoteComponent } from "../ssr-compose/renderRemoteComponent"
 import { createSSRRouter } from "../router/createSSRRouter"
-import { SSRContext } from "./SSRContext"
-import { resolveActionRouteData } from "./resolveActionRouteData"
 import { SSRComposeContext } from "../ssr-compose/SSRComposeContext"
+import { renderRemoteComponent } from "../ssr-compose/renderRemoteComponent"
+import { SSRContext } from "./SSRContext"
+import { SSRServerShared } from "./SSRServerShared"
+import { resolveActionRouteData } from "./resolveActionRouteData"
 
 export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
-  const { PreRender, mainEntryPath, browserScript } = SSRServerContext.ctx
   const { context, ssrOptions, ssrComposeOptions } = renderOptions
   const { req, res, headers } = ssrOptions
   const { logger, inputs, mode, meta, outputs, serverMode } = context
+  const { PreRender, mainEntryPath, browserScript } = await SSRServerShared.resolveContext({ inputs, serverMode })
   const pathname = (req as any).albumOptions.pathname
   const ssrContextProps: AlbumSSRContextProps = {
     ssrSlideProps: {

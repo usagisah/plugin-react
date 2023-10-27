@@ -2,37 +2,42 @@ import { AlbumContext } from "@w-hite/album/server"
 import { readFileSync } from "fs"
 import { dirname, relative, resolve } from "path"
 import { fileURLToPath } from "url"
-import { SSRComposeManifest } from "../ssr-compose/ssr-compose.type"
 import { transformCoordinate } from "../ssr-compose/cacheManifest"
+import { SSRComposeManifest } from "../ssr-compose/ssr-compose.type"
 
-export class SSRServerContext {
+type Props = {
+  serverMode: AlbumContext["serverMode"]
+  inputs: AlbumContext["inputs"]
+}
+
+export class SSRServerShared {
   PreRender: any
-  manifest: Record<string, any>
-  mainEntryPath: string
+  manifest?: Record<string, any>
+  mainEntryPath = ""
 
-  __dirname?: string
+  __dirname = dirname(fileURLToPath(import.meta.url))
   root?: string
   browserScript?: string
 
   ssrComposeManifest?: SSRComposeManifest
 
-  constructor(public ctx: AlbumContext) {}
+  constructor(public props: Props) {}
 
-  static ctx: SSRServerContext
-  static async setContext(ctx: AlbumContext) {
-    if (SSRServerContext.ctx) return
-    const _c = (SSRServerContext.ctx = new SSRServerContext(ctx))
+  static shared: SSRServerShared
+  static async resolveContext(props: Props) {
+    if (SSRServerShared.shared) return SSRServerShared.shared
+    const _c = (SSRServerShared.shared = new SSRServerShared(props))
     await _c.init()
+    return _c
   }
 
   async init() {
-    const { serverMode, inputs } = this.ctx
+    const { serverMode, inputs } = this.props
     const { cwd, dumpInput } = inputs
 
     if (serverMode === "start") {
       this.root = inputs.startInput
-      this.browserScript = resolve(this.__dirname, "browser.js")
-      this.__dirname = dirname(fileURLToPath(import.meta.url))
+      this.browserScript = resolve(__dirname, "browser.js")
       this.buildStartStaticInfo()
       this.ssrComposeManifest = await transformCoordinate(this)
     } else {
@@ -42,7 +47,7 @@ export class SSRServerContext {
   }
 
   buildStartStaticInfo() {
-    const file = readFileSync(resolve(this.__dirname, "../client/manifest.json"), "utf-8")
+    const file = readFileSync(resolve(this.__dirname!, "../client/manifest.json"), "utf-8")
     const manifest = (this.manifest = JSON.parse(file))
 
     const { preLinks, entryFile } = renderPreLinks(manifest)
@@ -57,8 +62,9 @@ export class SSRServerContext {
   }
 
   buildDevStaticInfo() {
+    const { cwd, realClientInput } = this.props.inputs
     this.manifest = {}
-    this.mainEntryPath = "/.album/main.tsx"
+    this.mainEntryPath = relative(cwd, realClientInput)
     this.PreRender = () => (
       <>
         <script

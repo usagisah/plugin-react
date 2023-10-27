@@ -16,7 +16,7 @@ export function buildMainParams(param: PluginPatchClientParam) {
   }
 
   if (ssrCompose) {
-    RemoteAppLoader = 'import { createRemoteAppLoader } from "./ssr-compose/components/RemoteAppLoader"\nregistryHook("createRemoteAppLoader", createRemoteAppLoader)'
+    RemoteAppLoader = 'import { createRemoteAppLoader } from "./plugin-react/ssr-compose/RemoteAppLoader"\nregistryHook("createRemoteAppLoader", createRemoteAppLoader)'
   }
 
   return {

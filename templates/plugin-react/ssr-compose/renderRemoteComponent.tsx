@@ -1,37 +1,23 @@
 import type { SSRComposeRenderRemoteComponentOptions, SSRComposeRenderRemoteComponentReturn, SSRComposeRenderProps } from "@w-hite/album/ssr"
-import { createModulePath } from "@w-hite/album/utils/modules/createModulePath"
-import { createHash } from "crypto"
 import { existsSync } from "fs"
 import { resolve } from "path"
-import { checkCacheChange, flushCacheManifest, loadCacheManifest } from "./cacheManifest"
+import { loadCacheManifest } from "./cacheManifest"
 import { renderComponentToString } from "./renderCompToString"
-
-const { __dirname } = createModulePath(import.meta.url)
-const cachePath = resolve(__dirname, "ssr-compose/.cache")
+import { SSRServerShared } from "../ssr/SSRServerShared"
 
 export async function renderRemoteComponent(renderOptions: SSRComposeRenderRemoteComponentOptions): Promise<SSRComposeRenderRemoteComponentReturn> {
-  const { renderProps, ssrComposeContextProps } = renderOptions
+  const { renderProps, ssrContextProps, ssrComposeContextProps } = renderOptions
   const { sourcePath } = normalizeRenderProps(renderProps)
-  const { moduleRoot, viteComponentBuild } = ssrComposeContextProps.ssrComposeOptions
+  const { moduleRoot } = ssrComposeContextProps.ssrComposeOptions
+  const { inputs, serverMode } = ssrContextProps.ssrSlideProps
+  await SSRServerShared.resolveContext({ inputs, serverMode })
 
   const input = resolve(moduleRoot, sourcePath)
   if (!existsSync(input)) {
     throw "资源不存在"
   }
 
-  let cacheManifest = await loadCacheManifest(renderOptions)
-  if (!cacheManifest || !cacheManifest[sourcePath] || checkCacheChange(cacheManifest[sourcePath])) {
-    const outDirName = createHash("md5").update(sourcePath).digest("hex")
-    const outDir = resolve(cachePath, outDirName)
-    await viteComponentBuild({ input, outDir })
-    cacheManifest = await flushCacheManifest({
-      cacheManifest,
-      sourcePath,
-      input,
-      outDir
-    })
-  }
-
+  const cacheManifest = await loadCacheManifest(renderOptions)
   const cache = cacheManifest[sourcePath]
   const res = await renderComponentToString(cache.filePath, renderOptions)
   return {

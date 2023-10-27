@@ -1,7 +1,8 @@
 import type { SSRComposeRenderRemoteComponentOptions, ServerDynamicData } from "@w-hite/album/ssr"
+
 import { renderToPipeableStream } from "react-dom/server"
 import { Writable } from "stream"
-import { SSRContext } from "../plugin-react/ssr/SSRContext"
+import { SSRContext } from "../ssr/SSRContext"
 import { SSRComposeContext } from "./SSRComposeContext"
 
 export function renderComponentToString(filePath: string, renderOptions: SSRComposeRenderRemoteComponentOptions) {

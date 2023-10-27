@@ -4,6 +4,8 @@
     "target": "ES2018",
     "moduleResolution": "Bundler",
     "composite": true,
+    "strictNullChecks": false,
+    "strict": true,
     "jsx": "react-jsx"
   },
   "include": [

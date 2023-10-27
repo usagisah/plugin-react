@@ -4,7 +4,7 @@ import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "fs"
 import { resolve } from "path"
 import type { SSRComposeCache, SSRComposeManifest } from "./ssr-compose.type"
 import { createHash } from "crypto"
-import { SSRServerContext } from "../ssr/SSRServerContext"
+import { SSRServerShared } from "../ssr/SSRServerShared"
 
 const { __dirname } = createModulePath(import.meta.url)
 const cachePath = resolve(__dirname, ".cache")
@@ -14,14 +14,14 @@ export function checkCacheChange(cacheInfo: SSRComposeCache) {
   return statSync(cacheInfo.filePath).atimeMs > cacheInfo.lastChange
 }
 
-export async function loadCacheManifest(renderOptions: SSRComposeRenderRemoteComponentOptions) {
+export async function loadCacheManifest(renderOptions: SSRComposeRenderRemoteComponentOptions): Promise<SSRComposeManifest> {
   const { mode } = renderOptions.ssrContextProps.ssrSlideProps
   const { moduleRoot, viteComponentBuild } = renderOptions.ssrComposeContextProps.ssrComposeOptions
   const { sourcePath } = renderOptions.renderProps
 
   if (mode === "production") {
-    const { ssrComposeManifest } = SSRServerContext.ctx
-    if (!ssrComposeManifest[sourcePath]) {
+    const { ssrComposeManifest } = await SSRServerShared.resolveContext(null as any)
+    if (!ssrComposeManifest![sourcePath]) {
       throw "资源不存在"
     }
     return ssrComposeManifest
@@ -33,13 +33,14 @@ export async function loadCacheManifest(renderOptions: SSRComposeRenderRemoteCom
   }
 
   const cacheManifestPath = resolve(cachePath, "ssr-compose.json")
-  if (!existsSync(cacheManifestPath)) return null
-
   let cacheManifest: SSRComposeManifest | null = null
-  try {
-    cacheManifest = JSON.parse(readFileSync(cacheManifestPath, "utf-8")) as SSRComposeManifest
-  } catch {
-    rmSync(cachePath, { force: true, recursive: true })
+
+  if (existsSync(cacheManifestPath)) {
+    try {
+      cacheManifest = JSON.parse(readFileSync(cacheManifestPath, "utf-8")) as SSRComposeManifest
+    } catch {
+      rmSync(cachePath, { force: true, recursive: true })
+    }
   }
 
   if (!cacheManifest || !cacheManifest[sourcePath] || checkCacheChange(cacheManifest[sourcePath])) {
@@ -57,12 +58,12 @@ export async function loadCacheManifest(renderOptions: SSRComposeRenderRemoteCom
   return cacheManifest
 }
 
-export async function transformCoordinate(ssrServerContext: SSRServerContext) {
-  const { __dirname, manifest } = ssrServerContext
+export async function transformCoordinate(ssrServerShared: SSRServerShared) {
+  const { __dirname, manifest } = ssrServerShared
   const coordinate = JSON.parse(readFileSync(resolve(__dirname, "coordinate.json"), "utf-8"))
   const ssrComposeManifest: SSRComposeManifest = {}
   for (const key in coordinate) {
-    const value = manifest[coordinate[key]]
+    const value = manifest![coordinate[key]]
     ssrComposeManifest[key] = {
       lastChange: 0,
       importPath: value.file,
@@ -76,7 +77,7 @@ export async function transformCoordinate(ssrServerContext: SSRServerContext) {
 }
 
 type FlushCacheManifestProps = {
-  cacheManifest: null | SSRComposeManifest
+  cacheManifest: SSRComposeManifest | null
   sourcePath: string
   input: string
   outDir: string

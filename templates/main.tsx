@@ -1,4 +1,3 @@
-
 import type { AppRouterFC } from "@w-hite/album"
 import { registryHook } from "@w-hite/album"
 import { Fragment } from "react"
