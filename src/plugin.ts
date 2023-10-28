@@ -120,7 +120,7 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
                         }
                       },
                       emptyOutDir: false,
-                      outDir: ssrOutDir
+                      outDir: clientOutDir
                     }
                   })
                   albumContext.logger.log("success", "ssr-compose")

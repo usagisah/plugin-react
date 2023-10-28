@@ -10,7 +10,7 @@ export async function renderRemoteComponent(renderOptions: SSRComposeRenderRemot
   const { sourcePath } = normalizeRenderProps(renderProps)
   const { moduleRoot } = ssrComposeContextProps.ssrComposeOptions
   const { inputs, serverMode } = ssrContextProps.ssrSlideProps
-  await SSRServerShared.resolveContext({ inputs, serverMode })
+  await SSRServerShared.resolveContext({ inputs, serverMode, ssrCompose: true })
 
   const input = resolve(moduleRoot, sourcePath)
   if (!existsSync(input)) {

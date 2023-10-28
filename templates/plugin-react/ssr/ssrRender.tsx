@@ -13,12 +13,10 @@ import { resolveActionRouteData } from "./resolveActionRouteData"
 export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
   const { context, ssrOptions, ssrComposeOptions } = renderOptions
   const { req, res, headers } = ssrOptions
-  const { logger, inputs, mode, meta, outputs, serverMode } = context
-  const { PreRender, mainEntryPath, browserScript } = await SSRServerShared.resolveContext({ inputs, serverMode })
-  const pathname = (req as any).albumOptions.pathname
+  const { logger, inputs, mode, meta, outputs, serverMode, ssrCompose } = context
+  const { PreRender, mainEntryPath, browserScript } = await SSRServerShared.resolveContext({ inputs, serverMode, ssrCompose: !!ssrCompose })
   const ssrContextProps: AlbumSSRContextProps = {
     ssrSlideProps: {
-      pathname,
       req,
       headers,
       mode,
@@ -34,7 +32,7 @@ export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
     serverDynamicData: {}
   }
   const actionData = await resolveActionRouteData(ssrContextProps, context)
-  const { App = null, Head = null, data } = await (userSsrEntry as any)(createSSRRouter(pathname), ssrContextProps.ssrSlideProps)
+  const { App = null, Head = null, data } = await (userSsrEntry as any)(createSSRRouter(req.originalUrl), ssrContextProps.ssrSlideProps)
   const serverRouteData = (ssrContextProps["serverRouteData"] = {
     ...actionData,
     ...(isPlainObject(data) ? data : {})

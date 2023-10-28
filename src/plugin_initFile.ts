@@ -8,10 +8,10 @@ import { renderTemplate } from "./renderTemplate.js"
 
 export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: ServerRoute[], param: PluginInitClientParam) {
   const pendingPromises: Promise<any>[] = []
-  const { fileManager, ssrCompose } = param
-  const { dumpInput, ssrInput } = param.inputs
-  const { ssr } = param.status
-  const { router } = param.clientConfig
+  const { app, fileManager, ssrCompose, inputs, status, clientConfig } = param
+  const { dumpInput, ssrInput } = inputs
+  const { ssr } = status
+  const { router } = clientConfig
 
   pendingPromises.push(...common(clientRoutes, param))
 
@@ -21,7 +21,14 @@ export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: 
       { type: "file", template: "plugin-react/hooks/useServer.ts", params: {} },
       { type: "file", template: "plugin-react/hooks/useServerData.ts", params: {} },
       { type: "file", template: "plugin-react/hooks/useServerRouteData.ts", params: {} },
-      { type: "file", template: "plugin-react/router/createSSRRouter.tsx", params: { basename: router.basename, RemoteAppLoader: ssrCompose ? `import { createRemoteAppLoader } from "../ssr-compose/RemoteAppLoader"\nregistryHook("createRemoteAppLoader", createRemoteAppLoader)` : "" } },
+      {
+        type: "file",
+        template: "plugin-react/router/createSSRRouter.tsx",
+        params: {
+          basename: ssrCompose ? `/${app}` : router.basename,
+          RemoteAppLoader: ssrCompose ? `import { createRemoteAppLoader } from "../ssr-compose/RemoteAppLoader"\nregistryHook("createRemoteAppLoader", createRemoteAppLoader)` : ""
+        }
+      },
       { type: "file", template: "plugin-react/router/routes.ssr.tsx", params: buildRoutesSSRParams(serverRoutes, dumpInput) },
       { type: "file", template: "plugin-react/ssr/resolveActionRouteData.ts", params: {} },
       { type: "file", template: "plugin-react/ssr/SSRContext.ts", params: {} },

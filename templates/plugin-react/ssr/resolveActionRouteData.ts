@@ -7,7 +7,7 @@ import { serverRoutes } from "../router/routes.ssr"
 export async function resolveActionRouteData({ ssrSlideProps }: AlbumSSRContextProps, { logger }: AlbumSSRContext) {
   let actionData: any = {}
 
-  const { url } = ssrSlideProps.req
+  const url = ssrSlideProps.req.originalUrl
   const index = url.indexOf("?")
   let pathname = url
   let search = ""

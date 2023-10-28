@@ -8,6 +8,7 @@ import { SSRComposeManifest } from "../ssr-compose/ssr-compose.type"
 type Props = {
   serverMode: AlbumContext["serverMode"]
   inputs: AlbumContext["inputs"]
+  ssrCompose: boolean
 }
 
 export class SSRServerShared {
@@ -37,7 +38,6 @@ export class SSRServerShared {
 
     if (serverMode === "start") {
       this.root = inputs.startInput
-      this.browserScript = resolve(__dirname, "browser.js")
       this.buildStartStaticInfo()
       this.ssrComposeManifest = await transformCoordinate(this)
     } else {
@@ -49,9 +49,10 @@ export class SSRServerShared {
   buildStartStaticInfo() {
     const file = readFileSync(resolve(this.__dirname!, "../client/manifest.json"), "utf-8")
     const manifest = (this.manifest = JSON.parse(file))
-
+    const isSSRCompose = this.props.ssrCompose
     const { preLinks, entryFile } = renderPreLinks(manifest)
-    this.mainEntryPath = "/" + entryFile.file
+    this.mainEntryPath = isSSRCompose ? `/${__APP_ID__}/${entryFile.file}` : "/" + entryFile.file
+    this.browserScript = isSSRCompose ? `/${__APP_ID__}/browser.js` : "/browser.js"
     this.PreRender = () => (
       <>
         {preLinks.map((attrs: any, index: number) => (
@@ -63,14 +64,17 @@ export class SSRServerShared {
 
   buildDevStaticInfo() {
     const { cwd, realClientInput } = this.props.inputs
+    const { ssrCompose } = this.props
     this.manifest = {}
     this.mainEntryPath = relative(cwd, realClientInput)
+
+    const importPrefix = ssrCompose ? `/${__APP_ID__}/` : "/"
     this.PreRender = () => (
       <>
         <script
           type="module"
           dangerouslySetInnerHTML={{
-            __html: 'import { injectIntoGlobalHook } from "/@react-refresh";injectIntoGlobalHook(window);window.$RefreshReg$ = () => {};window.$RefreshSig$ = () => (type) => type;'
+            __html: `import { injectIntoGlobalHook } from "${importPrefix}@react-refresh";injectIntoGlobalHook(window);window.$RefreshReg$ = () => {};window.$RefreshSig$ = () => (type) => type;`
           }}
         ></script>
         <script type="module" src="/@vite/client"></script>
