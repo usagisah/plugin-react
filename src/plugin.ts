@@ -89,11 +89,13 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
               },
               buildEnd: async () => {
                 if (isSSR && albumContext.configs.ssrCompose) {
-                  const { ssrComposeModuleRootInput, cwd, dumpInput } = albumContext.inputs
-                  if (!ssrComposeModuleRootInput) return
+                  const { module } = albumContext.configs.clientConfig
+                  const { cwd, dumpInput } = albumContext.inputs
+                  if (!module || !module.modulePath) return
 
                   albumContext.logger.log("正在打包 ssr-compose 附带文件", "ssr-compose")
                   const { clientOutDir, ssrOutDir } = albumContext.outputs
+                  const ssrComposeModuleRootInput = resolve(module.modulePath, "../")
                   const manifest = JSON.parse(readFileSync(resolve(clientOutDir, "manifest.json"), "utf-8"))
                   const moduleRoot = ssrComposeModuleRootInput.slice(cwd.length + 1)
                   const _coordinate: Record<string, string> = {}

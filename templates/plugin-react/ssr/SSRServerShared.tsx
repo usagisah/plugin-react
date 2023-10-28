@@ -50,7 +50,7 @@ export class SSRServerShared {
     const file = readFileSync(resolve(this.__dirname!, "../client/manifest.json"), "utf-8")
     const manifest = (this.manifest = JSON.parse(file))
     const isSSRCompose = this.props.ssrCompose
-    const { preLinks, entryFile } = renderPreLinks(manifest)
+    const { preLinks, entryFile } = renderPreLinks(this.props.ssrCompose ? `/${__APP_ID__}/` : "/", manifest)
     this.mainEntryPath = isSSRCompose ? `/${__APP_ID__}/${entryFile.file}` : "/" + entryFile.file
     this.browserScript = isSSRCompose ? `/${__APP_ID__}/browser.js` : "/browser.js"
     this.PreRender = () => (
@@ -83,7 +83,7 @@ export class SSRServerShared {
   }
 }
 
-export function renderPreLinks(manifest: Record<string, any>) {
+export function renderPreLinks(prefix: string, manifest: Record<string, any>) {
   let preLinks: any[] = []
   let entryFile: any = {}
   for (const key in manifest) {
@@ -92,12 +92,12 @@ export function renderPreLinks(manifest: Record<string, any>) {
     if (value.isEntry) {
       const preloadFiles = [...(value.assets ?? []), ...(value.css ?? [])]
       for (const path of preloadFiles) {
-        const attr = renderLinkAttr(path)
+        const attr = renderLinkAttr(prefix + path)
         if (attr) preLinks.push(attr)
       }
 
       for (const filePath of value.imports ?? []) {
-        const attr = renderLinkAttr(manifest[filePath].file)
+        const attr = renderLinkAttr(prefix + manifest[filePath].file)
         preLinks.push(attr)
       }
       break
@@ -108,8 +108,6 @@ export function renderPreLinks(manifest: Record<string, any>) {
 }
 
 export function renderLinkAttr(file: string) {
-  file = "/" + file
-
   if (file.endsWith(".js")) {
     return { rel: "modulepreload", href: file, crossOrigin: "true" }
   } else if (file.endsWith(".css")) {

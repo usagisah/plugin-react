@@ -7,7 +7,7 @@ import { SSRServerShared } from "../ssr/SSRServerShared"
 
 export async function renderRemoteComponent(renderOptions: SSRComposeRenderRemoteComponentOptions): Promise<SSRComposeRenderRemoteComponentReturn> {
   const { renderProps, ssrContextProps, ssrComposeContextProps } = renderOptions
-  const { sourcePath } = normalizeRenderProps(renderProps)
+  const { sourcePath } = normalizeRenderProps(renderProps);
   const { moduleRoot } = ssrComposeContextProps.ssrComposeOptions
   const { inputs, serverMode } = ssrContextProps.ssrSlideProps
   await SSRServerShared.resolveContext({ inputs, serverMode, ssrCompose: true })

@@ -25,7 +25,7 @@ export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: 
         type: "file",
         template: "plugin-react/router/createSSRRouter.tsx",
         params: {
-          basename: ssrCompose ? `/${app}` : router.basename,
+          basename: router.basename,
           RemoteAppLoader: ssrCompose ? `import { createRemoteAppLoader } from "../ssr-compose/RemoteAppLoader"\nregistryHook("createRemoteAppLoader", createRemoteAppLoader)` : ""
         }
       },

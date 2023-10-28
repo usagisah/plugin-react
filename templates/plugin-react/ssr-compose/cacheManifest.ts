@@ -1,7 +1,7 @@
 import { SSRComposeRenderRemoteComponentOptions } from "@w-hite/album/ssr"
 import { createModulePath } from "@w-hite/album/utils/modules/createModulePath"
 import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "fs"
-import { resolve } from "path"
+import { relative, resolve } from "path"
 import type { SSRComposeCache, SSRComposeManifest } from "./ssr-compose.type"
 import { createHash } from "crypto"
 import { SSRServerShared } from "../ssr/SSRServerShared"
@@ -62,14 +62,15 @@ export async function transformCoordinate(ssrServerShared: SSRServerShared) {
   const { __dirname, manifest } = ssrServerShared
   const coordinate = JSON.parse(readFileSync(resolve(__dirname, "coordinate.json"), "utf-8"))
   const ssrComposeManifest: SSRComposeManifest = {}
+  const clientRoot = resolve(__dirname, "../client")
   for (const key in coordinate) {
     const value = manifest![coordinate[key]]
     ssrComposeManifest[key] = {
       lastChange: 0,
-      importPath: value.file,
-      filePath: resolve(__dirname, value.file),
+      importPath: `${__APP_ID__}/${value.file}`,
+      filePath: resolve(clientRoot, value.file),
       assets: {
-        css: []
+        css: (value.css ?? []).map((file: string) => `${__APP_ID__}/${file}`)
       }
     }
   }

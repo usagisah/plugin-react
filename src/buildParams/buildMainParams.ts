@@ -21,6 +21,6 @@ export function buildMainParams(param: PluginPatchClientParam) {
     mainPath: relative(dumpInput, clientInput),
     ssr_hooks_registry,
     RemoteAppLoader,
-    basename: ssrCompose ? `/${app}` : router.basename
+    basename: router.basename,
   }
 }
