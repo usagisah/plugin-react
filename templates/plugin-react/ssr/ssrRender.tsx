@@ -82,9 +82,7 @@ export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
       }
 
       if (ssrComposeContextProps) {
-        res.write(`<script type="module" src="${browserScript}"></script>`)
-
-        let script = ['<script type="module">', "", "</script>"]
+        let script = ['<script type="module">', `await import("${browserScript}");`, "", `{import("${mainEntryPath}");}`, "</script>"]
         let promisesTemp = ""
         let mapTemp = ""
         let index = 0
@@ -94,19 +92,15 @@ export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
           const source = sources[sourcePath]
           if (source === false) continue
 
-          source.assets.css.forEach(css => {
-            res.write(`<link rel="stylesheet" href="${css}" />`)
-          })
-
+          source.assets.css.forEach(css => res.write(`<link rel="stylesheet" href="${css}" />`))
           promisesTemp += `import("${source.importPath}"),`
           mapTemp += `["${sourcePath}", map[${index}].default],`
           index++
         }
 
-        if (index > 0) {
-          script[1] = `const map = await Promise.all([${promisesTemp}]);\nwindow.__$_album_ssr_compose.sources = new Map([${mapTemp}]);`
-        }
+        script[2] = `const map = await Promise.all([${promisesTemp}]);\nwindow.__$_album_ssr_compose.sources = new Map([${mapTemp}]);`
         res.write(script.join(""))
+        return
       }
 
       res.write(`<script type="module" src="${mainEntryPath}"></script>`)

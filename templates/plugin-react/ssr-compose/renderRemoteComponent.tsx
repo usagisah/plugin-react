@@ -18,7 +18,9 @@ export async function renderRemoteComponent(renderOptions: SSRComposeRenderRemot
 
   const cacheManifest = await loadCacheManifest(prefix, coordinateMap, renderOptions)
   const cache = cacheManifest[sourcePath]
-  const res = serverMode === "start" ? (await import(/*@vite-ignore*/ ssrComposeProjectsInput.get(prefix)!.mainServerInput)).renderComponentToString(cache.filePath, renderOptions) : await renderComponentToString(cache.filePath, renderOptions)
+  // ssr-compose 下会使用 useContext 会出现不同实例
+  const renderToString = serverMode === "start" ? (await import(/* @vite-ignore */ ssrComposeProjectsInput.get(prefix)!.mainServerInput)).renderComponentToString : renderComponentToString
+  const res = await renderToString(cache.filePath, renderOptions)
   return {
     html: res.html,
     serverDynamicData: res.serverDynamicData,

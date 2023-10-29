@@ -25,10 +25,10 @@ export async function loadCacheManifest(prefix: string, coordinateMap: SSRCompos
         const ssrValue = ssrManifest[_key]
         ssrComposeManifest[key] = {
           lastChange: 0,
-          importPath: `${prefix}/${value.file}`,
-          filePath: resolve(startInput, prefix, "server", ssrValue[0].slice(1)),
+          importPath: `/${prefix}/${value.file}`,
+          filePath: resolve(startInput, prefix, "server", ssrValue[0].slice(prefix.length + 2)),
           assets: {
-            css: (value.css ?? []).map((file: string) => `${prefix}/${file}`)
+            css: (value.css ?? []).map((file: string) => `/${prefix}/${file}`)
           }
         }
       }

@@ -11,6 +11,8 @@ export function renderComponentToString(filePath: string, renderOptions: SSRComp
     serverDynamicData: ServerDynamicData
   }>(async (resolve, reject) => {
     const { renderProps, ssrRenderOptions, ssrComposeContextProps } = renderOptions
+    // 备份防止本地重复渲染导致的数据污染
+    const _serverDynamicData = ssrRenderOptions.ssrContextOptions.serverDynamicData
     const serverDynamicData: ServerDynamicData = (ssrRenderOptions.ssrContextOptions.serverDynamicData = {})
     const Component: any = await import(/*@vite-ignore*/ filePath).then(m => m.default)
     const app = (
@@ -31,6 +33,7 @@ export function renderComponentToString(filePath: string, renderOptions: SSRComp
     const { pipe } = renderToPipeableStream(app, {
       onAllReady() {
         pipe(writeStream)
+        ssrRenderOptions.ssrContextOptions.serverDynamicData = _serverDynamicData
         resolve({ html, serverDynamicData })
       },
       onError(error) {
