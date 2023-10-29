@@ -10,7 +10,16 @@ export function renderComponentToString(filePath: string, renderOptions: SSRComp
     html: string
     serverDynamicData: ServerDynamicData
   }>(async (resolve, reject) => {
-    const { app, serverDynamicData } = await buildRootComponent(filePath, renderOptions)
+    const { renderProps, ssrRenderOptions, ssrComposeContextProps } = renderOptions
+    const serverDynamicData: ServerDynamicData = (ssrRenderOptions.ssrContextOptions.serverDynamicData = {})
+    const Component: any = await import(/*@vite-ignore*/ filePath).then(m => m.default)
+    const app = (
+      <SSRContext.Provider value={ssrRenderOptions.ssrContextOptions}>
+        <SSRComposeContext.Provider value={ssrComposeContextProps}>
+          <Component {...renderProps.props} />
+        </SSRComposeContext.Provider>
+      </SSRContext.Provider>
+    )
 
     let html = ""
     const writeStream = new Writable({
@@ -29,21 +38,4 @@ export function renderComponentToString(filePath: string, renderOptions: SSRComp
       }
     })
   })
-}
-
-async function buildRootComponent(filePath: string, renderOptions: SSRComposeRenderRemoteComponentOptions) {
-  const { renderProps, ssrContextProps, ssrComposeContextProps } = renderOptions
-  const serverDynamicData: ServerDynamicData = (ssrContextProps.serverDynamicData = {})
-
-  const Component: any = await import(/*@vite-ignore*/ filePath).then(m => m.default)
-  return {
-    app: (
-      <SSRContext.Provider value={ssrContextProps}>
-        <SSRComposeContext.Provider value={ssrComposeContextProps}>
-          <Component {...renderProps.props} />
-        </SSRComposeContext.Provider>
-      </SSRContext.Provider>
-    ),
-    serverDynamicData
-  }
 }

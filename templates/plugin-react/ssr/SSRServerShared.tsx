@@ -2,7 +2,6 @@ import { AlbumContext } from "@w-hite/album/server"
 import { readFileSync } from "fs"
 import { dirname, relative, resolve } from "path"
 import { fileURLToPath } from "url"
-import { transformCoordinate } from "../ssr-compose/cacheManifest"
 import { SSRComposeManifest } from "../ssr-compose/ssr-compose.type"
 
 type Props = {
@@ -34,14 +33,11 @@ export class SSRServerShared {
 
   async init() {
     const { serverMode, inputs } = this.props
-    const { cwd, dumpInput } = inputs
-
     if (serverMode === "start") {
       this.root = inputs.startInput
       this.buildStartStaticInfo()
-      this.ssrComposeManifest = await transformCoordinate(this)
+      this.ssrComposeManifest = {}
     } else {
-      this.browserScript = relative(cwd, resolve(dumpInput, "plugin-react/ssr-compose/browser.ts"))
       this.buildDevStaticInfo()
     }
   }
@@ -50,9 +46,9 @@ export class SSRServerShared {
     const file = readFileSync(resolve(this.__dirname!, "../client/manifest.json"), "utf-8")
     const manifest = (this.manifest = JSON.parse(file))
     const isSSRCompose = this.props.ssrCompose
-    const { preLinks, entryFile } = renderPreLinks(this.props.ssrCompose ? `/${__APP_ID__}/` : "/", manifest)
-    this.mainEntryPath = isSSRCompose ? `/${__APP_ID__}/${entryFile.file}` : "/" + entryFile.file
-    this.browserScript = isSSRCompose ? `/${__APP_ID__}/browser.js` : "/browser.js"
+    const { preLinks, entryFile } = renderPreLinks(this.props.ssrCompose ? `/${__app_id__}/` : "/", manifest)
+    this.mainEntryPath = isSSRCompose ? `/${__app_id__}/${entryFile.file}` : "/" + entryFile.file
+    this.browserScript = isSSRCompose ? `/${__app_id__}/browser.js` : "/browser.js"
     this.PreRender = () => (
       <>
         {preLinks.map((attrs: any, index: number) => (
@@ -63,20 +59,13 @@ export class SSRServerShared {
   }
 
   buildDevStaticInfo() {
-    const { cwd, realClientInput } = this.props.inputs
-    const { ssrCompose } = this.props
+    const { cwd, realClientInput, dumpInput } = this.props.inputs
     this.manifest = {}
-    this.mainEntryPath = relative(cwd, realClientInput)
-
-    const importPrefix = ssrCompose ? `/${__APP_ID__}/` : "/"
+    this.mainEntryPath = "/" + relative(cwd, realClientInput)
+    this.browserScript = "/" + relative(cwd, resolve(dumpInput, "plugin-react/ssr-compose/browser.ts"))
     this.PreRender = () => (
       <>
-        <script
-          type="module"
-          dangerouslySetInnerHTML={{
-            __html: `import { injectIntoGlobalHook } from "${importPrefix}@react-refresh";injectIntoGlobalHook(window);window.$RefreshReg$ = () => {};window.$RefreshSig$ = () => (type) => type;`
-          }}
-        ></script>
+        <script type="module" dangerouslySetInnerHTML={{ __html: `import { injectIntoGlobalHook } from "/@react-refresh";injectIntoGlobalHook(window);window.$RefreshReg$ = () => {};window.$RefreshSig$ = () => (type) => type;` }}></script>
         <script type="module" src="/@vite/client"></script>
       </>
     )

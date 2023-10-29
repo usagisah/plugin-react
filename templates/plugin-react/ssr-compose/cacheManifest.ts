@@ -1,35 +1,40 @@
-import { SSRComposeRenderRemoteComponentOptions } from "@w-hite/album/ssr"
+import { SSRComposeCoordinateValue, SSRComposeRenderRemoteComponentOptions } from "@w-hite/album/ssr"
 import { createModulePath } from "@w-hite/album/utils/modules/createModulePath"
-import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "fs"
-import { relative, resolve } from "path"
-import type { SSRComposeCache, SSRComposeManifest } from "./ssr-compose.type"
 import { createHash } from "crypto"
+import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "fs"
+import { resolve } from "path"
 import { SSRServerShared } from "../ssr/SSRServerShared"
+import type { SSRComposeCache, SSRComposeManifest } from "./ssr-compose.type"
 
 const { __dirname } = createModulePath(import.meta.url)
 const cachePath = resolve(__dirname, ".cache")
 
-export function checkCacheChange(cacheInfo: SSRComposeCache) {
-  if (!cacheInfo) return true
-  return statSync(cacheInfo.filePath).atimeMs > cacheInfo.lastChange
-}
-
-export async function loadCacheManifest(renderOptions: SSRComposeRenderRemoteComponentOptions): Promise<SSRComposeManifest> {
-  const { mode } = renderOptions.ssrContextProps.ssrSlideProps
-  const { moduleRoot, viteComponentBuild } = renderOptions.ssrComposeContextProps.ssrComposeOptions
+export async function loadCacheManifest(prefix: string, coordinateMap: SSRComposeCoordinateValue, renderOptions: SSRComposeRenderRemoteComponentOptions): Promise<SSRComposeManifest> {
+  const { mode, inputs } = renderOptions.ssrRenderOptions.serverContext
+  const { viteComponentBuild } = renderOptions.ssrRenderOptions.ssrComposeOptions
   const { sourcePath } = renderOptions.renderProps
 
   if (mode === "production") {
+    const { startInput } = inputs
     const { ssrComposeManifest } = await SSRServerShared.resolveContext(null as any)
-    if (!ssrComposeManifest![sourcePath]) {
-      throw "资源不存在"
+    if (!ssrComposeManifest[sourcePath]) {
+      const { coordinate, manifest, ssrManifest } = coordinateMap
+      for (const key in coordinate) {
+        const _key = coordinate[key]
+        const value = manifest[_key]
+        const ssrValue = ssrManifest[_key]
+        ssrComposeManifest[key] = {
+          lastChange: 0,
+          importPath: `${prefix}/${value.file}`,
+          filePath: resolve(startInput, prefix, "server", ssrValue[0].slice(1)),
+          assets: {
+            css: (value.css ?? []).map((file: string) => `${prefix}/${file}`)
+          }
+        }
+      }
     }
-    return ssrComposeManifest
-  }
 
-  const input = resolve(moduleRoot, sourcePath)
-  if (!existsSync(input)) {
-    throw "资源不存在"
+    return ssrComposeManifest
   }
 
   const cacheManifestPath = resolve(cachePath, "ssr-compose.json")
@@ -42,8 +47,8 @@ export async function loadCacheManifest(renderOptions: SSRComposeRenderRemoteCom
       rmSync(cachePath, { force: true, recursive: true })
     }
   }
-
   if (!cacheManifest || !cacheManifest[sourcePath] || checkCacheChange(cacheManifest[sourcePath])) {
+    const input = coordinateMap.devFilepath!
     const outDirName = createHash("md5").update(sourcePath).digest("hex")
     const outDir = resolve(cachePath, outDirName)
     await viteComponentBuild({ input, outDir })
@@ -58,23 +63,9 @@ export async function loadCacheManifest(renderOptions: SSRComposeRenderRemoteCom
   return cacheManifest
 }
 
-export async function transformCoordinate(ssrServerShared: SSRServerShared) {
-  const { __dirname, manifest } = ssrServerShared
-  const coordinate = JSON.parse(readFileSync(resolve(__dirname, "coordinate.json"), "utf-8"))
-  const ssrComposeManifest: SSRComposeManifest = {}
-  const clientRoot = resolve(__dirname, "../client")
-  for (const key in coordinate) {
-    const value = manifest![coordinate[key]]
-    ssrComposeManifest[key] = {
-      lastChange: 0,
-      importPath: `${__APP_ID__}/${value.file}`,
-      filePath: resolve(clientRoot, value.file),
-      assets: {
-        css: (value.css ?? []).map((file: string) => `${__APP_ID__}/${file}`)
-      }
-    }
-  }
-  return ssrComposeManifest
+export function checkCacheChange(cacheInfo: SSRComposeCache) {
+  if (!cacheInfo) return true
+  return statSync(cacheInfo.filePath).atimeMs > cacheInfo.lastChange
 }
 
 type FlushCacheManifestProps = {

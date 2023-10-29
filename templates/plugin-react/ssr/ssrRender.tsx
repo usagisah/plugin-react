@@ -1,6 +1,6 @@
 // @ts-ignore
 import userSsrEntry from "'$mainServerPath$'"
-import type { AlbumSSRContextProps, AlbumSSRRenderOptions, SSRComposeContextProps } from "@w-hite/album/ssr"
+import type { AlbumSSRRenderOptions, SSRComposeContextProps } from "@w-hite/album/ssr"
 import { isPlainObject } from "@w-hite/album/utils/utils"
 import { renderToPipeableStream } from "react-dom/server"
 import { createSSRRouter } from "../router/createSSRRouter"
@@ -11,33 +11,18 @@ import { SSRServerShared } from "./SSRServerShared"
 import { resolveActionRouteData } from "./resolveActionRouteData"
 
 export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
-  const { context, ssrOptions, ssrComposeOptions } = renderOptions
-  const { req, res, headers } = ssrOptions
-  const { logger, inputs, mode, meta, outputs, serverMode, ssrCompose } = context
+  const { ssrComposeOptions, ctlOptions, serverContext, ssrContextOptions } = renderOptions
+  const { req, res } = ctlOptions
+  const { logger, inputs, serverMode, configs } = serverContext
+  const { ssrCompose } = configs
   const { PreRender, mainEntryPath, browserScript } = await SSRServerShared.resolveContext({ inputs, serverMode, ssrCompose: !!ssrCompose })
-  const ssrContextProps: AlbumSSRContextProps = {
-    ssrSlideProps: {
-      req,
-      headers,
-      mode,
-      serverMode,
-      logger,
-      inputs,
-      outputs,
-      meta,
-      query: {},
-      params: {}
-    },
-    serverRouteData: {},
-    serverDynamicData: {}
-  }
-  const actionData = await resolveActionRouteData(ssrContextProps, context)
-  const { App = null, Head = null, data } = await (userSsrEntry as any)(createSSRRouter(req.originalUrl), ssrContextProps.ssrSlideProps)
-  const serverRouteData = (ssrContextProps["serverRouteData"] = {
+  const actionData = await resolveActionRouteData(ssrContextOptions, serverContext)
+  const { App = null, Head = null, data } = await (userSsrEntry as any)(createSSRRouter(req.originalUrl), ssrContextOptions.ssrSlideProps)
+  const serverRouteData = (ssrContextOptions["serverRouteData"] = {
     ...actionData,
     ...(isPlainObject(data) ? data : {})
   })
-  const serverDynamicData = ssrContextProps.serverDynamicData
+  const serverDynamicData = ssrContextOptions.serverDynamicData
   let app = (
     <html lang="en">
       <head>
@@ -47,14 +32,18 @@ export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
       <body>{App}</body>
     </html>
   )
-
   let ssrComposeContextProps: SSRComposeContextProps | null = null
   {
     if (ssrComposeOptions) {
       async function _renderRemoteComponent(renderProps: any) {
         return renderRemoteComponent({
           renderProps,
-          ssrContextProps,
+          ssrRenderOptions: {
+            ctlOptions,
+            serverContext,
+            ssrComposeOptions,
+            ssrContextOptions
+          },
           ssrComposeContextProps: ssrComposeContextProps!
         })
       }
@@ -66,7 +55,7 @@ export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
 
       app = <SSRComposeContext.Provider value={ssrComposeContextProps}>{app}</SSRComposeContext.Provider>
     }
-    app = <SSRContext.Provider value={ssrContextProps}>{app}</SSRContext.Provider>
+    app = <SSRContext.Provider value={ssrContextOptions}>{app}</SSRContext.Provider>
   }
 
   const { pipe } = renderToPipeableStream(app, {

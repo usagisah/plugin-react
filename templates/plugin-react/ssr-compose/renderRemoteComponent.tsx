@@ -1,25 +1,24 @@
-import type { SSRComposeRenderRemoteComponentOptions, SSRComposeRenderRemoteComponentReturn, SSRComposeRenderProps } from "@w-hite/album/ssr"
-import { existsSync } from "fs"
-import { resolve } from "path"
+import type { SSRComposeRenderProps, SSRComposeRenderRemoteComponentOptions, SSRComposeRenderRemoteComponentReturn } from "@w-hite/album/ssr"
+import { SSRServerShared } from "../ssr/SSRServerShared"
 import { loadCacheManifest } from "./cacheManifest"
 import { renderComponentToString } from "./renderCompToString"
-import { SSRServerShared } from "../ssr/SSRServerShared"
 
 export async function renderRemoteComponent(renderOptions: SSRComposeRenderRemoteComponentOptions): Promise<SSRComposeRenderRemoteComponentReturn> {
-  const { renderProps, ssrContextProps, ssrComposeContextProps } = renderOptions
-  const { sourcePath } = normalizeRenderProps(renderProps);
-  const { moduleRoot } = ssrComposeContextProps.ssrComposeOptions
-  const { inputs, serverMode } = ssrContextProps.ssrSlideProps
+  const { renderProps, ssrRenderOptions } = renderOptions
+  const { prefix, sourcePath } = normalizeSourcePath(renderProps)
+  const { existsProject } = ssrRenderOptions.ssrComposeOptions!
+  const { inputs, serverMode } = ssrRenderOptions.serverContext
+  const { ssrComposeProjectsInput } = inputs
   await SSRServerShared.resolveContext({ inputs, serverMode, ssrCompose: true })
 
-  const input = resolve(moduleRoot, sourcePath)
-  if (!existsSync(input)) {
+  const coordinateMap = existsProject(prefix, sourcePath)
+  if (!coordinateMap) {
     throw "资源不存在"
   }
 
-  const cacheManifest = await loadCacheManifest(renderOptions)
+  const cacheManifest = await loadCacheManifest(prefix, coordinateMap, renderOptions)
   const cache = cacheManifest[sourcePath]
-  const res = await renderComponentToString(cache.filePath, renderOptions)
+  const res = serverMode === "start" ? (await import(/*@vite-ignore*/ ssrComposeProjectsInput.get(prefix)!.mainServerInput)).renderComponentToString(cache.filePath, renderOptions) : await renderComponentToString(cache.filePath, renderOptions)
   return {
     html: res.html,
     serverDynamicData: res.serverDynamicData,
@@ -28,10 +27,8 @@ export async function renderRemoteComponent(renderOptions: SSRComposeRenderRemot
   }
 }
 
-function normalizeRenderProps(renderProps: SSRComposeRenderProps): SSRComposeRenderProps {
-  const { sourcePath } = renderProps
-  if (sourcePath.startsWith("/")) {
-    renderProps.sourcePath = sourcePath.slice(1)
-  }
-  return renderProps
+function normalizeSourcePath(renderProps: SSRComposeRenderProps) {
+  let { sourcePath } = renderProps
+  if (sourcePath.startsWith("/")) sourcePath = renderProps.sourcePath = sourcePath.slice(1)
+  return { prefix: sourcePath.split("/")[0], sourcePath }
 }
