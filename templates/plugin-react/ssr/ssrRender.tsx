@@ -23,9 +23,17 @@ export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
     ...(isPlainObject(data) ? data : {})
   })
   const serverDynamicData = ssrContextOptions.serverDynamicData
+
+  const map: any = {}
+  if (ssrComposeOptions) {
+    Object.keys(inputs.ssrComposeDependencies).forEach(k => {
+      map[k] = "/" + k
+    })
+  }
   let app = (
     <html lang="en">
       <head>
+        {ssrComposeOptions && <script type="importmap" dangerouslySetInnerHTML={{ __html: `{"imports":${JSON.stringify(map)}}` }}></script>}
         <PreRender />
         {Head}
       </head>

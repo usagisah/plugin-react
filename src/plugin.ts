@@ -23,6 +23,15 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
   let albumContext: AlbumContext
 
   return {
+    config(param) {
+      const { ssrCompose } = param
+      if (!ssrCompose) return
+
+      const reactDependencies = [{ react: { "jsx-runtime": {} } }, "react", "react-dom", { "react-dom": { client: {} } }]
+      const { dependencies } = ssrCompose
+      if (!dependencies) ssrCompose.dependencies = reactDependencies
+      if (Array.isArray(dependencies)) dependencies.concat(reactDependencies)
+    },
     async findEntries(param) {
       const { result, inputs } = param
       const { main, mainSSR, module } = result
@@ -89,7 +98,6 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
         const { cwd, dumpInput } = albumContext.inputs
         if (!module || !module.modulePath) return
 
-        albumContext.logger.log("正在打包 ssr-compose 附带文件", "ssr-compose")
         const { clientOutDir } = albumContext.outputs
         const ssrComposeModuleRootInput = resolve(module.modulePath, "../")
         const manifest = JSON.parse(readFileSync(resolve(clientOutDir, "manifest.json"), "utf-8"))
@@ -100,7 +108,11 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
             _coordinate[key.slice(moduleRoot.length + 1)] = key
           }
         }
+
         writeFileSync(resolve(clientOutDir, "../coordinate.json"), JSON.stringify(_coordinate), "utf-8")
+        albumContext.logger.log("生成 ssr-compose 坐标文件成功", "plugin-react")
+
+        albumContext.logger.log("正在打包 ssr-compose 前置文件，请耐心等待...", "plugin-react")
         await viteBuild({
           plugins: [viteReactPlugin(pluginReact)],
           logLevel: "error",
@@ -116,8 +128,7 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
             outDir: clientOutDir
           }
         })
-        albumContext.logger.log("success", "ssr-compose")
-        console.log("\n\n")
+        albumContext.logger.log("生成 ssr-compose 前置文件成功", "plugin-react")
       }
     }
   }
