@@ -1,7 +1,7 @@
-import type { PluginPatchClientParam } from "@w-hite/album/cli"
+import { PluginPatchClientParam } from "@w-hite/album/cli"
 import { buildRoutesParams } from "./buildParams/buildRoutesParams.js"
 import { buildRoutesSSRParams } from "./buildParams/buildRoutesSSRParams.js"
-import type { ClientRoute, ServerRoute } from "./plugin.type.js"
+import { ClientRoute, ServerRoute } from "./plugin.type.js"
 import { renderTemplate } from "./renderTemplate.js"
 
 export async function pluginPatchFile(clientRoutes: ClientRoute[], serverRoutes: ServerRoute[], params: PluginPatchClientParam) {

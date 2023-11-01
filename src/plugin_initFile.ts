@@ -1,9 +1,9 @@
-import type { PluginInitClientParam } from "@w-hite/album/cli"
+import { PluginInitClientParam } from "@w-hite/album/cli"
 import { relative, resolve } from "path"
 import { buildMainParams } from "./buildParams/buildMainParams.js"
 import { buildRoutesParams } from "./buildParams/buildRoutesParams.js"
 import { buildRoutesSSRParams } from "./buildParams/buildRoutesSSRParams.js"
-import type { ClientRoute, ServerRoute } from "./plugin.type.js"
+import { ClientRoute, ServerRoute } from "./plugin.type.js"
 import { renderTemplate } from "./renderTemplate.js"
 
 export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: ServerRoute[], param: PluginInitClientParam) {

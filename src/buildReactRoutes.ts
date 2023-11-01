@@ -1,7 +1,7 @@
-import type { SpecialModule } from "@w-hite/album/cli"
+import { SpecialModule } from "@w-hite/album/cli"
 import { relative, resolve } from "path"
 import { pathToRegexp } from "path-to-regexp"
-import type { ClientRoute, ParseRouteContext, ServerRoute } from "./plugin.type.js"
+import { ClientRoute, ParseRouteContext, ServerRoute } from "./plugin.type.js"
 
 export async function buildReactRoutes(dumpInput: string, specialModule: SpecialModule[], ignoreModules: RegExp[]) {
   const { clientRoutes, serverRoutes } = await walkModule(specialModule, {

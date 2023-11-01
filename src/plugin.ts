@@ -1,6 +1,5 @@
-import type { AlbumContext, PluginViteConfig, UserPlugins } from "@w-hite/album/cli"
-
 import viteReactPlugin from "@vitejs/plugin-react-swc"
+import { AlbumContext, PluginViteConfig, UserPlugins } from "@w-hite/album/cli"
 import { findEntryPath } from "@w-hite/album/utils/utils"
 import { readFileSync, writeFileSync } from "fs"
 import { basename, resolve } from "path"
