@@ -1,5 +1,5 @@
-import type { SSRComposeRenderRemoteComponentReturn } from "@w-hite/album/ssr"
-import { isPlainObject, isString } from "@w-hite/album/utils/check/check"
+import { SSRComposeRenderRemoteComponentReturn } from "@w-hite/album/ssr"
+import { isPlainObject, isString } from "@w-hite/album/utils/check/simple"
 import { createElement, useContext } from "react"
 import { SSRContext } from "../../plugin-react/ssr/SSRContext"
 import { SSRComposeContext } from "./SSRComposeContext"
@@ -27,8 +27,7 @@ export function createRemoteAppLoader(props: { remote: boolean; url: string }) {
 
     if (import.meta.env.SSR) {
       const ssrContext = useContext(SSRContext)
-      const { serverDynamicData, ssrSlideProps } = ssrContext
-      const { logger } = ssrSlideProps
+      const { serverDynamicData, req: request, res: response, headers, logger } = ssrContext
 
       const composeContext = useContext(SSRComposeContext)
       const { sources, renderRemoteComponent } = composeContext
@@ -70,7 +69,7 @@ export function createRemoteAppLoader(props: { remote: boolean; url: string }) {
                 }
                 return res.result
               })
-            : renderRemoteComponent({ props, sourcePath }))
+            : renderRemoteComponent({ props, sourcePath }, { req: request, res: response, headers }))
           Object.assign(serverDynamicData, res.serverDynamicData)
           if (!_source) {
             _source = sources[_sourcePath] = {

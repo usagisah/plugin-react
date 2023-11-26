@@ -1,5 +1,4 @@
-import type { AppRouterFC } from "@w-hite/album"
-import { registryHook } from "@w-hite/album"
+import { AppRouterFC, registryHook } from "@w-hite/album"
 import { Fragment } from "react"
 import { BrowserRouter } from "react-router-dom"
 import { AppRoutes, routes, routesMap } from "./plugin-react/router/routes"
@@ -11,9 +10,9 @@ registryHook("useRoutesMap", () => routesMap)
 registryHook("useRouter", useRouter)
 registryHook("useLoader", useLoader)
 
-"$ssr_hooks_registry$"
+;("$ssr_hooks_registry$")
 
-"$RemoteAppLoader$"
+;("$RemoteAppLoader$")
 // @ts-ignore
 import mainFactory from "'$mainPath$'"
 

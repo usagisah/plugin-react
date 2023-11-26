@@ -1,4 +1,3 @@
-import fg from "fast-glob"
 import { readFile } from "fs/promises"
 import { dirname, resolve } from "path"
 import { fileURLToPath } from "url"

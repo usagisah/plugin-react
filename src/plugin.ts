@@ -1,6 +1,6 @@
 import viteReactPlugin from "@vitejs/plugin-react-swc"
-import { AlbumContext, PluginViteConfig, UserPlugins } from "@w-hite/album/cli"
-import { findEntryPath } from "@w-hite/album/utils/utils"
+import { AlbumDevContext, AlbumUserPlugin, mergeConfig } from "@w-hite/album/cli"
+import { resolveDirPath, resolveFilePath } from "@w-hite/album/utils/path/resolvePath"
 import { readFileSync, writeFileSync } from "fs"
 import { basename, resolve } from "path"
 import { build as viteBuild } from "vite"
@@ -16,46 +16,45 @@ export type PluginReact = {
   ignoreModules?: IgnoreModules
 }
 
-export default function pluginReact(props?: PluginReact): UserPlugins {
+export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
   const { pluginReact, ignoreModules } = props ?? {}
   const _ignoreModules = buildIgnoreModules(ignoreModules)
-  let albumContext: AlbumContext
+  let albumContext: AlbumDevContext
 
   return {
+    name: "album:plugin-react",
     config(param) {
-      const { ssrCompose } = param
-      if (!ssrCompose) return
-
-      const reactDependencies = [{ react: { "jsx-runtime": {} } }, "react", "react-dom", { "react-dom": { client: {} } }]
-      const { dependencies } = ssrCompose
-      if (!dependencies) ssrCompose.dependencies = reactDependencies
-      if (Array.isArray(dependencies)) dependencies.concat(reactDependencies)
+      if (!param.config.ssrCompose) return
+      mergeConfig(param.config, {
+        ssrCompose: {
+          dependencies: ["react", "react/jsx-runtime", "react-dom", "react-dom/client"]
+        }
+      })
     },
     async findEntries(param) {
       const { result, inputs } = param
       const { main, mainSSR, module } = result
 
       const [_main, _modulePath] = await Promise.all([
-        findEntryPath({
-          cwd: inputs.cwd,
+        resolveFilePath({
+          root: inputs.cwd,
           name: main ?? "main",
           exts: [".tsx", ".ts"]
         }),
-        findEntryPath({
-          cwd: inputs.cwd,
-          name: module.modulePath ?? "modules",
-          exts: []
+        resolveDirPath({
+          root: inputs.cwd,
+          name: module.path ?? "modules"
         })
       ])
       result.main = _main
       result.module = {
-        modulePath: _modulePath,
-        moduleName: module.moduleName ?? basename(_modulePath)
+        path: _modulePath,
+        name: module.name ?? basename(_modulePath)
       }
 
       if (mainSSR) {
-        const _mainSSR = await findEntryPath({
-          cwd: inputs.cwd,
+        const _mainSSR = await resolveFilePath({
+          root: inputs.cwd,
           name: mainSSR ?? "main.ssr",
           exts: [".tsx", ".ts"]
         })
@@ -64,40 +63,44 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
     },
     context(param) {
       albumContext = param.albumContext
+      const file = albumContext.appFileManager.get("file", "album-env.d.ts")
+      file.update(`${file.value}\n/// <reference types="@w-hite/plugin-react/album" />`)
     },
     async initClient(param) {
-      const { result, inputs, status, specialModules } = param
+      const { result, info, specialModules } = param
+      const { ssr, inputs } = info
       const { clientRoutes, serverRoutes } = await buildReactRoutes(inputs.dumpInput, specialModules, _ignoreModules)
       await pluginInitFile(clientRoutes, serverRoutes, param)
       result.realClientInput = resolve(inputs.dumpInput, "main.tsx")
-      if (status.ssr) {
-        result.realSSRInput = resolve(inputs.dumpInput, "main.ssr.tsx")
-      }
+      if (ssr) result.realSSRInput = resolve(inputs.dumpInput, "main.ssr.tsx")
     },
     async patchClient(param) {
-      const { inputs, specialModules } = param
+      const { info, specialModules } = param
+      const { inputs } = info
       const { clientRoutes, serverRoutes } = await buildReactRoutes(inputs.dumpInput, specialModules, _ignoreModules)
       await pluginPatchFile(clientRoutes, serverRoutes, param)
     },
-    async serverConfig(props) {
-      const config: PluginViteConfig = {
+    async serverConfig(params) {
+      params.viteConfigs.push({
         name: "plugin-react",
-        options: {
+        config: {
           build: {
             emptyOutDir: false
           },
           plugins: [viteReactPlugin(pluginReact) as any]
         }
-      }
-      props.viteConfigs.push(config)
+      })
     },
     async buildEnd() {
-      if (albumContext.status.ssr && albumContext.configs.ssrCompose) {
-        const { module } = albumContext.configs.clientConfig
-        const { cwd, dumpInput } = albumContext.inputs
+      const { info, clientConfig, logger } = albumContext
+      const { ssr, ssrCompose, inputs, outputs } = info
+
+      if (ssr && ssrCompose) {
+        const { module } = clientConfig
+        const { cwd, dumpInput } = inputs
         if (!module || !module.modulePath) return
 
-        const { clientOutDir } = albumContext.outputs
+        const { clientOutDir } = outputs
         const ssrComposeModuleRootInput = resolve(module.modulePath, "../")
         const manifest = JSON.parse(readFileSync(resolve(clientOutDir, "manifest.json"), "utf-8"))
         const moduleRoot = ssrComposeModuleRootInput.slice(cwd.length + 1)
@@ -109,9 +112,9 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
         }
 
         writeFileSync(resolve(clientOutDir, "../coordinate.json"), JSON.stringify(_coordinate), "utf-8")
-        albumContext.logger.log("生成 ssr-compose 坐标文件成功", "plugin-react")
+        logger.log("生成 ssr-compose 坐标文件成功", "plugin-react")
 
-        albumContext.logger.log("正在打包 ssr-compose 前置文件，请耐心等待...", "plugin-react")
+        logger.log("正在打包 ssr-compose 前置文件，请耐心等待...", "plugin-react")
         await viteBuild({
           plugins: [viteReactPlugin(pluginReact)],
           logLevel: "error",
@@ -127,7 +130,7 @@ export default function pluginReact(props?: PluginReact): UserPlugins {
             outDir: clientOutDir
           }
         })
-        albumContext.logger.log("生成 ssr-compose 前置文件成功", "plugin-react")
+        logger.log("生成 ssr-compose 前置文件成功", "plugin-react")
       }
     }
   }

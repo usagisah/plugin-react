@@ -1,20 +1,9 @@
-import type { GuardRouteProps, LocalData, GuardLoader } from "@w-hite/album"
-import { queryString } from "@w-hite/album/utils/common/queryString"
-import { useRoutesMap, RouterRoute } from "@w-hite/album"
-import { callPromiseWithCatch } from "../utils/callWithCatch"
+import { GuardLoader, GuardRouteProps, LocalData, RouterRoute, useRoutesMap } from "@w-hite/album"
+import { queryString } from "@w-hite/album/utils/request/searchParams"
 import { useContext, useEffect, useRef, useState } from "react"
-import {
-  useLocation,
-  useParams,
-  useNavigate,
-  NavigateFunction,
-  matchPath
-} from "react-router-dom"
-import {
-  RouteContext,
-  RouteContextValue,
-  RouteLoaderValue
-} from "./RouteContext"
+import { NavigateFunction, matchPath, useLocation, useNavigate, useParams } from "react-router-dom"
+import { callPromiseWithCatch } from "../utils/callWithCatch"
+import { RouteContext, RouteContextValue, RouteLoaderValue } from "./RouteContext"
 
 export function GuardRoute(props: GuardRouteProps) {
   const { children, onEnter, route } = props
@@ -30,9 +19,7 @@ export function GuardRoute(props: GuardRouteProps) {
     loader: null
   } as any).current
 
-  const [Component, setComponent] = useState(
-    !parentContext && onEnter ? null : children
-  )
+  const [Component, setComponent] = useState(!parentContext && onEnter ? null : children)
 
   if (parentContext) {
     Object.assign(local, parentContext.localData)
@@ -68,9 +55,7 @@ export function GuardRoute(props: GuardRouteProps) {
     })
   }
 
-  return (
-    <RouteContext.Provider value={context}>{Component}</RouteContext.Provider>
-  )
+  return <RouteContext.Provider value={context}>{Component}</RouteContext.Provider>
 }
 
 type InnerRouteContext = {
@@ -86,11 +71,7 @@ async function doEach(ctx: InnerRouteContext) {
   const { Component, setComponent } = useComponent
   if (!context.parentContext && props.onEnter) {
     const curPath = local.pathname
-    const res = await callPromiseWithCatch(
-      props.onEnter,
-      [local, navigate],
-      "GuardRoute-onEnter has a error"
-    )
+    const res = await callPromiseWithCatch(props.onEnter, [local, navigate], "GuardRoute-onEnter has a error")
     if (res !== true || curPath !== context.localData.pathname) return
   } else if (Component !== props.children) {
     setComponent(props.children)
@@ -104,9 +85,7 @@ async function doLoader(ctx: InnerRouteContext) {
   if (context.parentContext) return
 
   const curPath = local.pathname
-  const routesList = [...useRoutesMap()].find(([path]) =>
-    matchPath(path, curPath)
-  )!
+  const routesList = [...useRoutesMap()].find(([path]) => matchPath(path, curPath))!
   const loaderList = collectLoaders(routesList[1])
   await Promise.all([
     loaderList.map(async ([loaderFn, route]) => {
@@ -114,10 +93,7 @@ async function doLoader(ctx: InnerRouteContext) {
       if (_options && _options.stage === "loading") return
 
       let options: RouteLoaderValue
-      context.loader.set(
-        route.fullPath,
-        (options = { stage: "loading", value: null, pending: [] })
-      )
+      context.loader.set(route.fullPath, (options = { stage: "loading", value: null, pending: [] }))
       try {
         options.value = await loaderFn(local)
         options.stage = "success"
@@ -134,10 +110,7 @@ async function doLoader(ctx: InnerRouteContext) {
   ])
 }
 
-function collectLoaders(
-  route: any,
-  loaders: any = []
-): [GuardLoader, RouterRoute][] {
+function collectLoaders(route: any, loaders: any = []): [GuardLoader, RouterRoute][] {
   const { meta, parent } = route
   if (meta && meta.loader) loaders.push([meta.loader, route])
   if (parent) return collectLoaders(parent, loaders)

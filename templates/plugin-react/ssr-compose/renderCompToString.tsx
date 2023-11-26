@@ -1,26 +1,26 @@
-import type { SSRComposeRenderRemoteComponentOptions, ServerDynamicData } from "@w-hite/album/ssr"
-
+import { AlbumSSRServerDynamicData, SSRComposeRenderRemoteComponentOptions } from "@w-hite/album/ssr"
 import { renderToPipeableStream } from "react-dom/server"
 import { Writable } from "stream"
 import { SSRContext } from "../ssr/SSRContext"
 import { SSRComposeContext } from "./SSRComposeContext"
 
+type ReturnType = {
+  html: string
+  serverDynamicData: AlbumSSRServerDynamicData
+}
+
 export function renderComponentToString(filePath: string, renderOptions: SSRComposeRenderRemoteComponentOptions) {
-  return new Promise<{
-    html: string
-    serverDynamicData: ServerDynamicData
-  }>(async (resolve, reject) => {
-    const { renderProps, ssrRenderOptions, ssrComposeContextProps } = renderOptions
-    // 备份防止本地重复渲染导致的数据污染
-    const _serverDynamicData = ssrRenderOptions.ssrContextOptions.serverDynamicData
-    const serverDynamicData: ServerDynamicData = (ssrRenderOptions.ssrContextOptions.serverDynamicData = {})
+  return new Promise<ReturnType>(async (resolve, reject) => {
+    const { renderProps, ssrContext, ssrComposeContext } = renderOptions
+    const { serverDynamicData } = ssrContext
+    const _serverDynamicData = (ssrContext.serverDynamicData = {})
     const Component: any = await import(/*@vite-ignore*/ filePath).then(m => m.default)
     const app = (
-      <SSRContext.Provider value={ssrRenderOptions.ssrContextOptions}>
-        <SSRComposeContext.Provider value={ssrComposeContextProps}>
+      <SSRComposeContext.Provider value={ssrComposeContext}>
+        <SSRContext.Provider value={ssrContext}>
           <Component {...renderProps.props} />
-        </SSRComposeContext.Provider>
-      </SSRContext.Provider>
+        </SSRContext.Provider>
+      </SSRComposeContext.Provider>
     )
 
     let html = ""
@@ -33,8 +33,8 @@ export function renderComponentToString(filePath: string, renderOptions: SSRComp
     const { pipe } = renderToPipeableStream(app, {
       onAllReady() {
         pipe(writeStream)
-        ssrRenderOptions.ssrContextOptions.serverDynamicData = _serverDynamicData
-        resolve({ html, serverDynamicData })
+        ssrContext.serverDynamicData = serverDynamicData
+        resolve({ html, serverDynamicData: _serverDynamicData })
       },
       onError(error) {
         reject(error)

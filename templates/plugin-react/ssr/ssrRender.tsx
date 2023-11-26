@@ -1,70 +1,36 @@
-// @ts-ignore
-import userSsrEntry from "'$mainServerPath$'"
-import type { AlbumSSRRenderOptions, SSRComposeContextProps } from "@w-hite/album/ssr"
-import { isPlainObject } from "@w-hite/album/utils/utils"
+import { AlbumSSRRenderOptions } from "@w-hite/album/ssr"
+import { isPlainObject } from "@w-hite/album/utils/check/simple"
 import { renderToPipeableStream } from "react-dom/server"
 import { createSSRRouter } from "../router/createSSRRouter"
 import { SSRComposeContext } from "../ssr-compose/SSRComposeContext"
-import { renderRemoteComponent } from "../ssr-compose/renderRemoteComponent"
 import { SSRContext } from "./SSRContext"
 import { SSRServerShared } from "./SSRServerShared"
 import { resolveActionRouteData } from "./resolveActionRouteData"
+// @ts-expect-error
+import userSsrEntry from "'$mainServerPath$'"
 
 export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
-  const { ssrComposeOptions, ctlOptions, serverContext, ssrContextOptions } = renderOptions
-  const { req, res } = ctlOptions
-  const { logger, inputs, serverMode, configs } = serverContext
-  const { ssrCompose } = configs
-  const { PreRender, mainEntryPath, browserScript } = await SSRServerShared.resolveContext({ inputs, serverMode, ssrCompose: !!ssrCompose })
-  const actionData = await resolveActionRouteData(ssrContextOptions, serverContext)
-  const { App = null, Head = null, data } = await (userSsrEntry as any)(createSSRRouter(req.originalUrl), ssrContextOptions.ssrSlideProps)
-  const serverRouteData = (ssrContextOptions["serverRouteData"] = {
-    ...actionData,
-    ...(isPlainObject(data) ? data : {})
-  })
-  const serverDynamicData = ssrContextOptions.serverDynamicData
+  const { ssrContext, ssrComposeContext } = renderOptions
+  const { logger, ssrCompose, req, res, serverRouteData, serverDynamicData } = ssrContext
+  const { dependenciesMap, sources } = ssrComposeContext ?? {}
+  const { PreRender, mainEntryPath, browserScript } = await SSRServerShared.resolveContext(renderOptions)
+  const { App = null, Head = null, data } = await (userSsrEntry as any)(createSSRRouter(req.originalUrl), ssrContext)
 
-  const map: any = {}
-  if (ssrComposeOptions) {
-    Object.keys(inputs.ssrComposeDependencies).forEach(k => {
-      map[k] = "/" + k
-    })
-  }
+  Object.assign(serverRouteData, await resolveActionRouteData(ssrContext), isPlainObject(data) ? data : {})
+
   let app = (
-    <html lang="en">
-      <head>
-        {ssrComposeOptions && <script type="importmap" dangerouslySetInnerHTML={{ __html: `{"imports":${JSON.stringify(map)}}` }}></script>}
-        <PreRender />
-        {Head}
-      </head>
-      <body>{App}</body>
-    </html>
+    <SSRContext.Provider value={ssrContext}>
+      <html lang="en">
+        <head>
+          {ssrCompose && <script type="importmap" dangerouslySetInnerHTML={{ __html: `{"imports":${JSON.stringify(dependenciesMap)}}` }}></script>}
+          <PreRender />
+          {Head}
+        </head>
+        <body>{App}</body>
+      </html>
+    </SSRContext.Provider>
   )
-  let ssrComposeContextProps: SSRComposeContextProps | null = null
-  {
-    if (ssrComposeOptions) {
-      async function _renderRemoteComponent(renderProps: any) {
-        return renderRemoteComponent({
-          renderProps,
-          ssrRenderOptions: {
-            ctlOptions,
-            serverContext,
-            ssrComposeOptions,
-            ssrContextOptions
-          },
-          ssrComposeContextProps: ssrComposeContextProps!
-        })
-      }
-      ssrComposeContextProps = {
-        sources: {},
-        renderRemoteComponent: _renderRemoteComponent,
-        ssrComposeOptions
-      } as SSRComposeContextProps
-
-      app = <SSRComposeContext.Provider value={ssrComposeContextProps}>{app}</SSRComposeContext.Provider>
-    }
-    app = <SSRContext.Provider value={ssrContextOptions}>{app}</SSRContext.Provider>
-  }
+  if (ssrCompose) app = <SSRComposeContext.Provider value={ssrComposeContext}>{app}</SSRComposeContext.Provider>
 
   const { pipe } = renderToPipeableStream(app, {
     onShellReady() {
@@ -89,13 +55,12 @@ export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
         }
       }
 
-      if (ssrComposeContextProps) {
+      if (ssrCompose) {
         let script = ['<script type="module">', `await import("${browserScript}");`, "", `{import("${mainEntryPath}");}`, "</script>"]
         let promisesTemp = ""
         let mapTemp = ""
         let index = 0
 
-        const { sources } = ssrComposeContextProps
         for (const sourcePath of Object.getOwnPropertyNames(sources)) {
           const source = sources[sourcePath]
           if (source === false) continue

@@ -4,17 +4,14 @@ import { loadCacheManifest } from "./cacheManifest"
 import { renderComponentToString } from "./renderCompToString"
 
 export async function renderRemoteComponent(renderOptions: SSRComposeRenderRemoteComponentOptions): Promise<SSRComposeRenderRemoteComponentReturn> {
-  const { renderProps, ssrRenderOptions } = renderOptions
+  const { renderProps, ssrContext, ssrComposeContext } = renderOptions
+  const { serverMode } = ssrContext
+  const { existsProject } = ssrComposeContext
   const { prefix, sourcePath } = normalizeSourcePath(renderProps)
-  const { existsProject } = ssrRenderOptions.ssrComposeOptions!
-  const { inputs, serverMode } = ssrRenderOptions.serverContext
-  const { ssrComposeProjectsInput } = inputs
-  await SSRServerShared.resolveContext({ inputs, serverMode, ssrCompose: true })
+  await SSRServerShared.resolveContext(renderOptions)
 
   const coordinateMap = existsProject(prefix, sourcePath)
-  if (!coordinateMap) {
-    throw "资源不存在"
-  }
+  if (!coordinateMap) throw "资源不存在"
 
   const cacheManifest = await loadCacheManifest(prefix, coordinateMap, renderOptions)
   const cache = cacheManifest[sourcePath]

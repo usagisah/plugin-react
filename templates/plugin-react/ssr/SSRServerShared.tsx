@@ -1,14 +1,8 @@
-import { AlbumContext } from "@w-hite/album/server"
+import { AlbumSSRRenderOptions } from "@w-hite/album/ssr"
 import { readFileSync } from "fs"
 import { dirname, relative, resolve } from "path"
 import { fileURLToPath } from "url"
 import { SSRComposeManifest } from "../ssr-compose/ssr-compose.type"
-
-type Props = {
-  serverMode: AlbumContext["serverMode"]
-  inputs: AlbumContext["inputs"]
-  ssrCompose: boolean
-}
 
 export class SSRServerShared {
   PreRender: any
@@ -21,20 +15,20 @@ export class SSRServerShared {
 
   ssrComposeManifest?: SSRComposeManifest
 
-  constructor(public props: Props) {}
+  constructor(public options: AlbumSSRRenderOptions) {}
 
   static shared: SSRServerShared
-  static async resolveContext(props: Props) {
+  static async resolveContext(options: AlbumSSRRenderOptions) {
     if (SSRServerShared.shared) return SSRServerShared.shared
-    const _c = (SSRServerShared.shared = new SSRServerShared(props))
+    const _c = (SSRServerShared.shared = new SSRServerShared(options))
     await _c.init()
     return _c
   }
 
   async init() {
-    const { serverMode, inputs } = this.props
+    const { serverMode, inputs } = this.options.ssrContext
     if (serverMode === "start") {
-      this.root = inputs.startInput
+      this.root = inputs.root
       this.buildStartStaticInfo()
       this.ssrComposeManifest = {}
     } else {
@@ -45,10 +39,10 @@ export class SSRServerShared {
   buildStartStaticInfo() {
     const file = readFileSync(resolve(this.__dirname!, "../client/manifest.json"), "utf-8")
     const manifest = (this.manifest = JSON.parse(file))
-    const isSSRCompose = this.props.ssrCompose
-    const { preLinks, entryFile } = renderPreLinks(this.props.ssrCompose ? `/${__app_id__}/` : "/", manifest)
-    this.mainEntryPath = isSSRCompose ? `/${__app_id__}/${entryFile.file}` : "/" + entryFile.file
-    this.browserScript = isSSRCompose ? `/${__app_id__}/browser.js` : "/browser.js"
+    const { ssrCompose } = this.options.ssrContext
+    const { preLinks, entryFile } = renderPreLinks(ssrCompose ? `/${__app_id__}/` : "/", manifest)
+    this.mainEntryPath = ssrCompose ? `/${__app_id__}/${entryFile.file}` : "/" + entryFile.file
+    this.browserScript = ssrCompose ? `/${__app_id__}/browser.js` : "/browser.js"
     this.PreRender = () => (
       <>
         {preLinks.map((attrs: any, index: number) => (
@@ -59,10 +53,10 @@ export class SSRServerShared {
   }
 
   buildDevStaticInfo() {
-    const { cwd, realClientInput, dumpInput } = this.props.inputs
+    const { cwd, clientEntryInput, root } = this.options.ssrContext.inputs
     this.manifest = {}
-    this.mainEntryPath = "/" + relative(cwd, realClientInput)
-    this.browserScript = "/" + relative(cwd, resolve(dumpInput, "plugin-react/ssr-compose/browser.ts"))
+    this.mainEntryPath = "/" + relative(cwd, clientEntryInput)
+    this.browserScript = "/" + relative(cwd, resolve(root, "plugin-react/ssr-compose/browser.ts"))
     this.PreRender = () => (
       <>
         <script type="module" dangerouslySetInnerHTML={{ __html: `import { injectIntoGlobalHook } from "/@react-refresh";injectIntoGlobalHook(window);window.$RefreshReg$ = () => {};window.$RefreshSig$ = () => (type) => type;` }}></script>

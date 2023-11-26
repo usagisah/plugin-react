@@ -1,5 +1,4 @@
-import type { ReactNode } from "react"
-import { Suspense, lazy } from "react"
+import { ReactNode, Suspense, lazy } from "react"
 
 export function lazyLoad(
   factory: () => Promise<{

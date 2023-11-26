@@ -1,18 +1,19 @@
-import { SSRComposeCoordinateValue, SSRComposeRenderRemoteComponentOptions } from "@w-hite/album/ssr"
-import { createModulePath } from "@w-hite/album/utils/modules/createModulePath"
+import { SSRComposeRenderRemoteComponentOptions } from "@w-hite/album/ssr"
 import { createHash } from "crypto"
 import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "fs"
-import { resolve } from "path"
+import { dirname, resolve } from "path"
+import { fileURLToPath } from "url"
 import { SSRServerShared } from "../ssr/SSRServerShared"
-import type { SSRComposeCache, SSRComposeManifest } from "./ssr-compose.type"
+import { SSRComposeCache, SSRComposeManifest } from "./ssr-compose.type"
 
-const { __dirname } = createModulePath(import.meta.url)
+const __dirname = dirname(fileURLToPath(import.meta.url))
 const cachePath = resolve(__dirname, ".cache")
 
 export async function loadCacheManifest(prefix: string, coordinateMap: SSRComposeCoordinateValue, renderOptions: SSRComposeRenderRemoteComponentOptions): Promise<SSRComposeManifest> {
-  const { mode, inputs } = renderOptions.ssrRenderOptions.serverContext
-  const { viteComponentBuild } = renderOptions.ssrRenderOptions.ssrComposeOptions
-  const { sourcePath } = renderOptions.renderProps
+  const { renderProps, ssrContext, ssrComposeContext } = renderOptions
+  const { sourcePath } = renderProps
+  const { mode, inputs } = ssrContext
+  const { viteComponentBuild } = ssrComposeContext
 
   if (mode === "production") {
     const { startInput } = inputs

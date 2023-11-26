@@ -8,9 +8,10 @@ import { renderTemplate } from "./renderTemplate.js"
 
 export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: ServerRoute[], param: PluginInitClientParam) {
   const pendingPromises: Promise<any>[] = []
-  const { app, fileManager, ssrCompose, inputs, status, clientConfig } = param
-  const { dumpInput, ssrInput } = inputs
-  const { ssr } = status
+  const { info, clientConfig, dumpFileManager } = param
+  const { ssr, ssrCompose, inputs } = info
+  const { dumpInput } = inputs
+  const { mainSSRInput } = clientConfig
   const { router } = clientConfig
 
   pendingPromises.push(...common(clientRoutes, param))
@@ -36,7 +37,7 @@ export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: 
         type: "file",
         template: "plugin-react/ssr/ssrRender.tsx",
         params: {
-          mainServerPath: relative(resolve(dumpInput, "plugin-react/ssr"), ssrInput)
+          mainServerPath: relative(resolve(dumpInput, "plugin-react/ssr"), mainSSRInput)
         }
       },
       { type: "file", template: "plugin-react/ssr/SSRServerShared.tsx", params: {} },
@@ -50,14 +51,14 @@ export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: 
       { type: "file", template: "plugin-react/ssr-compose/SSRComposeContext.ts", params: {} }
     ]
 
-    pendingPromises.push(...ssrConfigs.map(async f => fileManager.add(f.type as "file", f.template, await renderTemplate(f.template, f.params))))
+    pendingPromises.push(...ssrConfigs.map(async f => dumpFileManager.add(f.type as "file", f.template, await renderTemplate(f.template, f.params))))
   }
 
   await Promise.all(pendingPromises)
 }
 
 function common(clientRoutes: any[], param: PluginInitClientParam) {
-  const { fileManager } = param
+  const { dumpFileManager } = param
   const clientConfigs = [
     { type: "file", template: "plugin-react/hooks/useLoader.ts", params: {} },
     { type: "file", template: "plugin-react/hooks/useRouter.ts", params: {} },
@@ -68,5 +69,5 @@ function common(clientRoutes: any[], param: PluginInitClientParam) {
     { type: "file", template: "plugin-react/router/routes.tsx", params: buildRoutesParams(clientRoutes) },
     { type: "file", template: "main.tsx", params: buildMainParams(param) }
   ]
-  return clientConfigs.map(async f => fileManager.add(f.type as "file", f.template, await renderTemplate(f.template, f.params)))
+  return clientConfigs.map(async f => dumpFileManager.add(f.type as "file", f.template, await renderTemplate(f.template, f.params)))
 }

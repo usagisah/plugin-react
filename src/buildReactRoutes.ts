@@ -22,7 +22,7 @@ async function walkModule(mods: SpecialModule[], ctx: ParseRouteContext) {
   let serverRoutes: ServerRoute[] = []
 
   for (const mod of mods) {
-    if (ignoreModules.some(reg => reg.test(mod.fileName))) {
+    if (ignoreModules.some(reg => reg.test(mod.filename))) {
       continue
     }
 
@@ -36,14 +36,14 @@ async function walkModule(mods: SpecialModule[], ctx: ParseRouteContext) {
 async function moduleToRoute(mod: SpecialModule, ctx: ParseRouteContext) {
   const { dumpInput, parentClientPath, parentServerPath, ignoreModules } = ctx
 
-  const routeRecordName = mod.fileName
+  const routeRecordName = mod.filename
   const clientCompPath = mod.routePath.replaceAll("$", ":")
   const clientRoute: ClientRoute = {
     name: routeRecordName,
     path: clientCompPath,
     fullPath: connectPath(parentClientPath, clientCompPath),
-    component: `lazyLoad(() => import("${relative(resolve(dumpInput, "plugin-react/router"), mod.routeFilePath)}"))`,
-    router: mod.router ? relative(resolve(dumpInput, "plugin-react/router"), mod.router.filePath) : null,
+    component: `lazyLoad(() => import("${relative(resolve(dumpInput, "plugin-react/router"), mod.pageFile.filepath)}"))`,
+    router: mod.routePath ? relative(resolve(dumpInput, "plugin-react/router"), mod.routePath) : null,
     children: []
   }
 
@@ -54,7 +54,7 @@ async function moduleToRoute(mod: SpecialModule, ctx: ParseRouteContext) {
     reg: pathToRegexp(serverFullPath, null, { sensitive: false }),
     path: serverCompPath,
     fullPath: serverFullPath,
-    actionPath: mod.action?.filePath,
+    actionPath: mod.actionFile?.filepath,
     children: []
   }
 
