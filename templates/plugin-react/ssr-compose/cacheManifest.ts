@@ -1,4 +1,4 @@
-import { SSRComposeRenderRemoteComponentOptions } from "@w-hite/album/ssr"
+import { SSRComposeCoordinateValue, SSRComposeDevCoordinateValue, SSRComposeRenderRemoteComponentOptions, SSRComposeStartCoordinateValue } from "@w-hite/album/ssr"
 import { createHash } from "crypto"
 import { existsSync, readFileSync, rmSync, statSync, writeFileSync } from "fs"
 import { dirname, resolve } from "path"
@@ -16,10 +16,10 @@ export async function loadCacheManifest(prefix: string, coordinateMap: SSRCompos
   const { viteComponentBuild } = ssrComposeContext
 
   if (mode === "production") {
-    const { startInput } = inputs
+    const { root } = inputs
     const { ssrComposeManifest } = await SSRServerShared.resolveContext(null as any)
     if (!ssrComposeManifest[sourcePath]) {
-      const { coordinate, manifest, ssrManifest } = coordinateMap
+      const { coordinate, manifest, ssrManifest } = coordinateMap as SSRComposeStartCoordinateValue
       for (const key in coordinate) {
         const _key = coordinate[key]
         const value = manifest[_key]
@@ -27,7 +27,7 @@ export async function loadCacheManifest(prefix: string, coordinateMap: SSRCompos
         ssrComposeManifest[key] = {
           lastChange: 0,
           importPath: `/${prefix}/${value.file}`,
-          filePath: resolve(startInput, prefix, "server", ssrValue[0].slice(prefix.length + 2)),
+          filePath: resolve(root, prefix, "server", ssrValue[0].slice(prefix.length + 2)),
           assets: {
             css: (value.css ?? []).map((file: string) => `/${prefix}/${file}`)
           }
@@ -49,7 +49,7 @@ export async function loadCacheManifest(prefix: string, coordinateMap: SSRCompos
     }
   }
   if (!cacheManifest || !cacheManifest[sourcePath] || checkCacheChange(cacheManifest[sourcePath])) {
-    const input = coordinateMap.devFilepath!
+    const input = (coordinateMap as SSRComposeDevCoordinateValue).devFilepath
     const outDirName = createHash("md5").update(sourcePath).digest("hex")
     const outDir = resolve(cachePath, outDirName)
     await viteComponentBuild({ input, outDir })
