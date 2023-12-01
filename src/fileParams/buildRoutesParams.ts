@@ -2,7 +2,6 @@ export function buildRoutesParams(routes: any[]) {
   let str_defines = ""
   let str_imports = ""
   let str_useRoutes = "[" + nextRoute(routes, 0) + "]"
-
   function nextRoute(routes: any[], deep: number) {
     let _useRoute_code = ""
     for (const route of routes) {

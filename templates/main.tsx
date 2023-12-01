@@ -10,9 +10,9 @@ registryHook("useRoutesMap", () => routesMap)
 registryHook("useRouter", useRouter)
 registryHook("useLoader", useLoader)
 
-;("$ssr_hooks_registry$")
+"$ssr_hooks_registry$"
 
-;("$RemoteAppLoader$")
+"$RemoteAppLoader$"
 // @ts-ignore
 import mainFactory from "'$mainPath$'"
 

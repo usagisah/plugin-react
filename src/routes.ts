@@ -10,27 +10,20 @@ export async function buildReactRoutes(dumpInput: string, specialModule: Special
     parentServerPath: "",
     ignoreModules
   })
-  return {
-    clientRoutes: moveErrorToLast(clientRoutes),
-    serverRoutes: moveErrorToLast(orderRoutes(serverRoutes))
-  }
+  return { clientRoutes: moveErrorToLast(clientRoutes), serverRoutes: moveErrorToLast(serverRoutes) }
 }
 
 async function walkModule(mods: SpecialModule[], ctx: ParseRouteContext) {
   const { ignoreModules } = ctx
   let clientRoutes: ClientRoute[] = []
   let serverRoutes: ServerRoute[] = []
-
   for (const mod of mods) {
-    if (ignoreModules.some(reg => reg.test(mod.filename))) {
-      continue
-    }
-
+    if (ignoreModules.some(reg => reg.test(mod.filename))) continue
     const _res = await moduleToRoute(mod, ctx)
     clientRoutes.push(_res.clientRoute)
     serverRoutes.push(_res.serverRoute, ..._res.serverRoute.children)
   }
-  return { clientRoutes: orderRoutes(clientRoutes), serverRoutes }
+  return { clientRoutes: orderRoutes(clientRoutes), serverRoutes: orderRoutes(serverRoutes) }
 }
 
 async function moduleToRoute(mod: SpecialModule, ctx: ParseRouteContext) {
@@ -43,7 +36,7 @@ async function moduleToRoute(mod: SpecialModule, ctx: ParseRouteContext) {
     path: clientCompPath,
     fullPath: connectPath(parentClientPath, clientCompPath),
     component: `lazyLoad(() => import("${relative(resolve(dumpInput, "plugin-react/router"), mod.pageFile.filepath)}"))`,
-    router: mod.routePath ? relative(resolve(dumpInput, "plugin-react/router"), mod.routePath) : null,
+    router: mod.routerFile ? relative(resolve(dumpInput, "plugin-react/router"), mod.routerFile.filepath) : null,
     children: []
   }
 
@@ -54,7 +47,7 @@ async function moduleToRoute(mod: SpecialModule, ctx: ParseRouteContext) {
     reg: pathToRegexp(serverFullPath, null, { sensitive: false }),
     path: serverCompPath,
     fullPath: serverFullPath,
-    actionPath: mod.actionFile?.filepath,
+    actionPath: mod.actionFile ? relative(resolve(dumpInput, "plugin-react/router"), mod.actionFile.filepath) : null,
     children: []
   }
 
@@ -97,7 +90,8 @@ function moveErrorToLast<T = ClientRoute | ServerRoute>(routes: T[]) {
   const errorRoutes: T[] = []
   const normalRoutes: T[] = []
   routes.forEach((r: any) => {
-    r.fullPath.startsWith("/(.*)") || r.fullPath.startsWith("/*") ? errorRoutes.push(r) : normalRoutes.push(r)
+    if (r.fullPath.startsWith("/(.*)") || r.fullPath.startsWith("/*")) errorRoutes.push(r)
+    else normalRoutes.push(r)
   })
   return [...normalRoutes, ...errorRoutes]
 }

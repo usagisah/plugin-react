@@ -1,6 +1,6 @@
 import { PluginPatchClientParam } from "@w-hite/album/cli"
-import { buildRoutesParams } from "./buildParams/buildRoutesParams.js"
-import { buildRoutesSSRParams } from "./buildParams/buildRoutesSSRParams.js"
+import { buildRoutesParams } from "./fileParams/buildRoutesParams.js"
+import { buildRoutesSSRParams } from "./fileParams/buildRoutesSSRParams.js"
 import { ClientRoute, ServerRoute } from "./plugin.type.js"
 import { renderTemplate } from "./renderTemplate.js"
 

@@ -5,9 +5,9 @@ import { readFileSync, writeFileSync } from "fs"
 import { basename, resolve } from "path"
 import { build as viteBuild } from "vite"
 import { IgnoreModules, buildIgnoreModules } from "./buildIgnoreModules.js"
-import { buildReactRoutes } from "./buildReactRoutes.js"
-import { pluginInitFile } from "./plugin_initFile.js"
-import { pluginPatchFile } from "./plugin_patchFile.js"
+import { pluginInitFile } from "./initFile.js"
+import { pluginPatchFile } from "./patchFile.js"
+import { buildReactRoutes } from "./routes.js"
 
 type PluginProps<T> = T extends (props: infer P) => any ? P : never
 
@@ -43,13 +43,13 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
         }),
         resolveDirPath({
           root: inputs.cwd,
-          name: module.path ?? "modules"
+          name: module?.name ?? "modules"
         })
       ])
       result.main = _main
       result.module = {
         path: _modulePath,
-        name: module.name ?? basename(_modulePath)
+        name: module?.name ?? basename(_modulePath)
       }
 
       if (mainSSR) {
