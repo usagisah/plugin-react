@@ -47,7 +47,7 @@ async function moduleToRoute(mod: SpecialModule, ctx: ParseRouteContext) {
     reg: pathToRegexp(serverFullPath, null, { sensitive: false }),
     path: serverCompPath,
     fullPath: serverFullPath,
-    actionPath: mod.actionFile ? relative(resolve(dumpInput, "plugin-react/router"), mod.actionFile.filepath) : null,
+    actionPath: mod.actionFile ? relative(resolve(dumpInput, "plugin-react/ssr"), mod.actionFile.filepath) : null,
     children: []
   }
 

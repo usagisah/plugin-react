@@ -34,11 +34,15 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
     async findEntries(param) {
       const { result, inputs } = param
       const { main, mainSSR, module } = result
-
-      const [_main, _modulePath] = await Promise.all([
+      const [_main, _mainSSR, _modulePath] = await Promise.all([
         resolveFilePath({
           root: inputs.cwd,
           name: main ?? "main",
+          exts: [".tsx", ".ts"]
+        }),
+        resolveFilePath({
+          root: inputs.cwd,
+          name: mainSSR ?? "main.ssr",
           exts: [".tsx", ".ts"]
         }),
         resolveDirPath({
@@ -47,18 +51,10 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
         })
       ])
       result.main = _main
+      result.mainSSR = _mainSSR
       result.module = {
         path: _modulePath,
         name: module?.name ?? basename(_modulePath)
-      }
-
-      if (mainSSR) {
-        const _mainSSR = await resolveFilePath({
-          root: inputs.cwd,
-          name: mainSSR ?? "main.ssr",
-          exts: [".tsx", ".ts"]
-        })
-        result.mainSSR = _mainSSR
       }
     },
     context(param) {

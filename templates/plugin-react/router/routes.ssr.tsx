@@ -7,6 +7,6 @@ export type ServerRoute = {
 }
 
 export const serverRoutes: ServerRoute[] = [
-  // @ts-ignore
-"$serverRoutesCode$"
+  // @ts-expect-error
+  "$serverRoutesCode$"
 ]

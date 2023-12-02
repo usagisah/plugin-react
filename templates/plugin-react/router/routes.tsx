@@ -7,7 +7,7 @@ import { lazyLoad } from "./lazyLoad"
 type Props = {
   onEnter?: GuardOnEnter
 }
-// @ts-ignore
+
 "$str_defines$"
 
 export const routes = "$str_useRoutes$"

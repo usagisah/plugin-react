@@ -4,8 +4,8 @@ import { matchPath } from "react-router-dom"
 import { serverRoutes } from "../router/routes.ssr"
 
 export async function resolveActionRouteData(ssrContext: AlbumSSRContext) {
-  const { params, albumOptions, logger } = ssrContext
-  const { pathname } = albumOptions
+  const { params, albumOptions, req, logger } = ssrContext
+  const pathname = albumOptions ? albumOptions.pathname : req.url
   const actionData: any = {}
   const route = serverRoutes.find(route => route.reg.test(pathname))
   if (route) {

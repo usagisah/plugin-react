@@ -13,7 +13,7 @@ registryHook("useLoader", useLoader)
 "$ssr_hooks_registry$"
 
 "$RemoteAppLoader$"
-// @ts-ignore
+// @ts-expect-error
 import mainFactory from "'$mainPath$'"
 
 const AppRouterComponent: AppRouterFC = ({ Layout = Fragment, ...props }) => (
