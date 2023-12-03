@@ -27,7 +27,7 @@ export async function loadCacheManifest(prefix: string, coordinateMap: SSRCompos
         ssrComposeManifest[key] = {
           lastChange: 0,
           importPath: `/${prefix}/${value.file}`,
-          filePath: resolve(root, prefix, "server", ssrValue[0].slice(prefix.length + 2)),
+          filePath: resolve(root, prefix, "ssr", ssrValue[0].slice(prefix.length + 2)),
           assets: {
             css: (value.css ?? []).map((file: string) => `/${prefix}/${file}`)
           }

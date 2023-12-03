@@ -2,7 +2,7 @@ import viteReactPlugin from "@vitejs/plugin-react-swc"
 import { AlbumDevContext, AlbumUserPlugin, mergeConfig } from "@w-hite/album/cli"
 import { resolveDirPath, resolveFilePath } from "@w-hite/album/utils/path/resolvePath"
 import { readFileSync, writeFileSync } from "fs"
-import { basename, resolve } from "path"
+import { resolve } from "path"
 import { build as viteBuild } from "vite"
 import { IgnoreModules, buildIgnoreModules } from "./buildIgnoreModules.js"
 import { pluginInitFile } from "./initFile.js"
@@ -25,7 +25,7 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
     name: "album:plugin-react",
     config(param) {
       if (!param.config.ssrCompose) return
-      mergeConfig(param.config, {
+      param.config = mergeConfig(param.config, {
         ssrCompose: {
           dependencies: ["react", "react/jsx-runtime", "react-dom", "react-dom/client"]
         }
@@ -33,28 +33,31 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
     },
     async findEntries(param) {
       const { result, inputs } = param
+      const { cwd } = inputs
       const { main, mainSSR, module } = result
       const [_main, _mainSSR, _modulePath] = await Promise.all([
         resolveFilePath({
-          root: inputs.cwd,
+          root: cwd,
           name: main ?? "main",
           exts: [".tsx", ".ts"]
         }),
         resolveFilePath({
-          root: inputs.cwd,
+          root: cwd,
           name: mainSSR ?? "main.ssr",
           exts: [".tsx", ".ts"]
         }),
-        resolveDirPath({
-          root: inputs.cwd,
-          name: module?.name ?? "modules"
-        })
+        module.path
+          ? resolve(cwd, module.path)
+          : resolveDirPath({
+              root: cwd,
+              name: module?.name ?? "modules"
+            })
       ])
       result.main = _main
       result.mainSSR = _mainSSR
       result.module = {
         path: _modulePath,
-        name: module?.name ?? basename(_modulePath)
+        name: module?.name ?? "modules"
       }
     },
     context(param) {

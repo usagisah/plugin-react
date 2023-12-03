@@ -16,15 +16,10 @@ export function createRemoteAppLoader(props: { remote: boolean; url: string }) {
 
   function RemoteAppLoader(_props: RemoteAppLoaderProps) {
     let { sourcePath, wrapperName, wrapperProps, ...props } = _props
-    if (typeof sourcePath !== "string" || sourcePath.length === 0) {
-      throw "缺少一个字符串类型的 sourcePath 参数"
-    }
-    if (sourcePath.startsWith("/")) {
-      sourcePath = sourcePath.slice(1)
-    }
+    if (typeof sourcePath !== "string" || sourcePath.length === 0) throw "缺少一个字符串类型的 sourcePath 参数"
+    if (sourcePath.startsWith("/")) sourcePath = sourcePath.slice(1)
 
     const _sourcePath = remote + "_" + sourcePath
-
     if (import.meta.env.SSR) {
       const ssrContext = useContext(SSRContext)
       const { serverDynamicData, req: request, res: response, headers, logger } = ssrContext
