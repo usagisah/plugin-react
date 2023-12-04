@@ -3,22 +3,19 @@ import { relative, resolve } from "path"
 import { pathToRegexp } from "path-to-regexp"
 import { ClientRoute, ParseRouteContext, ServerRoute } from "./plugin.type.js"
 
-export async function buildReactRoutes(dumpInput: string, specialModule: SpecialModule[], ignoreModules: RegExp[]) {
+export async function buildReactRoutes(dumpInput: string, specialModule: SpecialModule[]) {
   const { clientRoutes, serverRoutes } = await walkModule(specialModule, {
     dumpInput,
     parentClientPath: "",
-    parentServerPath: "",
-    ignoreModules
+    parentServerPath: ""
   })
   return { clientRoutes: moveErrorToLast(clientRoutes), serverRoutes: moveErrorToLast(serverRoutes) }
 }
 
 async function walkModule(mods: SpecialModule[], ctx: ParseRouteContext) {
-  const { ignoreModules } = ctx
   let clientRoutes: ClientRoute[] = []
   let serverRoutes: ServerRoute[] = []
   for (const mod of mods) {
-    if (ignoreModules.some(reg => reg.test(mod.filename))) continue
     const _res = await moduleToRoute(mod, ctx)
     clientRoutes.push(_res.clientRoute)
     serverRoutes.push(_res.serverRoute, ..._res.serverRoute.children)
@@ -27,8 +24,7 @@ async function walkModule(mods: SpecialModule[], ctx: ParseRouteContext) {
 }
 
 async function moduleToRoute(mod: SpecialModule, ctx: ParseRouteContext) {
-  const { dumpInput, parentClientPath, parentServerPath, ignoreModules } = ctx
-
+  const { dumpInput, parentClientPath, parentServerPath } = ctx
   const routeRecordName = mod.filename
   const clientCompPath = mod.routePath.replaceAll("$", ":")
   const clientRoute: ClientRoute = {
@@ -55,8 +51,7 @@ async function moduleToRoute(mod: SpecialModule, ctx: ParseRouteContext) {
     const _res = await walkModule(mod.children, {
       dumpInput,
       parentClientPath: clientRoute.fullPath,
-      parentServerPath: serverRoute.fullPath,
-      ignoreModules
+      parentServerPath: serverRoute.fullPath
     })
     clientRoute.children = _res.clientRoutes
     serverRoute.children = _res.serverRoutes

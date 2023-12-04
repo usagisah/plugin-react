@@ -4,7 +4,6 @@ import { resolveDirPath, resolveFilePath } from "@w-hite/album/utils/path/resolv
 import { readFileSync, writeFileSync } from "fs"
 import { resolve } from "path"
 import { build as viteBuild } from "vite"
-import { IgnoreModules, buildIgnoreModules } from "./buildIgnoreModules.js"
 import { pluginInitFile } from "./initFile.js"
 import { pluginPatchFile } from "./patchFile.js"
 import { buildReactRoutes } from "./routes.js"
@@ -13,12 +12,10 @@ type PluginProps<T> = T extends (props: infer P) => any ? P : never
 
 export type PluginReact = {
   pluginReact?: PluginProps<typeof viteReactPlugin>
-  ignoreModules?: IgnoreModules
 }
 
 export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
-  const { pluginReact, ignoreModules } = props ?? {}
-  const _ignoreModules = buildIgnoreModules(ignoreModules)
+  const { pluginReact } = props ?? {}
   let albumContext: AlbumDevContext
 
   return {
@@ -63,12 +60,15 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
     context(param) {
       albumContext = param.albumContext
       const file = albumContext.appFileManager.get("file", "album-env.d.ts")
-      file.update(`${file.value}\n/// <reference types="@w-hite/plugin-react/album" />`)
+      file.write(f => {
+        const typePlugin = `/// <reference types="@w-hite/plugin-react/album" />`
+        return f.includes(typePlugin) ? f : `${f}\n${typePlugin}`
+      })
     },
     async initClient(param) {
       const { result, info, specialModules } = param
       const { ssr, inputs } = info
-      const { clientRoutes, serverRoutes } = await buildReactRoutes(inputs.dumpInput, specialModules, _ignoreModules)
+      const { clientRoutes, serverRoutes } = await buildReactRoutes(inputs.dumpInput, specialModules)
       await pluginInitFile(clientRoutes, serverRoutes, param)
       result.realClientInput = resolve(inputs.dumpInput, "main.tsx")
       if (ssr) result.realSSRInput = resolve(inputs.dumpInput, "main.ssr.tsx")
@@ -76,7 +76,7 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
     async patchClient(param) {
       const { info, specialModules } = param
       const { inputs } = info
-      const { clientRoutes, serverRoutes } = await buildReactRoutes(inputs.dumpInput, specialModules, _ignoreModules)
+      const { clientRoutes, serverRoutes } = await buildReactRoutes(inputs.dumpInput, specialModules)
       await pluginPatchFile(clientRoutes, serverRoutes, param)
     },
     async serverConfig(params) {

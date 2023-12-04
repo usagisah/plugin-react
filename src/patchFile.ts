@@ -24,5 +24,5 @@ export async function pluginPatchFile(clientRoutes: ClientRoute[], serverRoutes:
     })
   }
 
-  await Promise.all(configs.map(async f => dumpFileManager.get("file", f.file).update(await renderTemplate(f.file, f.params))))
+  await Promise.all(configs.map(async f => dumpFileManager.get("file", f.file).write(await renderTemplate(f.file, f.params))))
 }

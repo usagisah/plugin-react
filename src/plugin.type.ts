@@ -20,5 +20,4 @@ export type ParseRouteContext = {
   dumpInput: string
   parentClientPath: string
   parentServerPath: string
-  ignoreModules: RegExp[]
 }
