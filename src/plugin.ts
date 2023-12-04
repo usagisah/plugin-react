@@ -31,7 +31,7 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
     async findEntries(param) {
       const { result, inputs } = param
       const { cwd } = inputs
-      const { main, mainSSR, module } = result
+      const { main, mainSSR, module = {} } = result
       const [_main, _mainSSR, _modulePath] = await Promise.all([
         resolveFilePath({
           root: cwd,
@@ -47,31 +47,32 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
           ? resolve(cwd, module.path)
           : resolveDirPath({
               root: cwd,
-              name: module?.name ?? "modules"
+              name: module.name ?? "modules"
             })
       ])
       result.main = _main
       result.mainSSR = _mainSSR
       result.module = {
         path: _modulePath,
-        name: module?.name ?? "modules"
+        name: module.name ?? "modules"
       }
     },
     context(param) {
       albumContext = param.albumContext
-      const file = albumContext.appFileManager.get("file", "album-env.d.ts")
-      file.write(f => {
-        const typePlugin = `/// <reference types="@w-hite/plugin-react/album" />`
-        return f.includes(typePlugin) ? f : `${f}\n${typePlugin}`
-      })
     },
     async initClient(param) {
-      const { result, info, specialModules } = param
+      const { result, info, specialModules, appFileManager } = param
       const { ssr, inputs } = info
       const { clientRoutes, serverRoutes } = await buildReactRoutes(inputs.dumpInput, specialModules)
       await pluginInitFile(clientRoutes, serverRoutes, param)
       result.realClientInput = resolve(inputs.dumpInput, "main.tsx")
       if (ssr) result.realSSRInput = resolve(inputs.dumpInput, "main.ssr.tsx")
+
+      const file = appFileManager.get("file", "album-env.d.ts")
+      file.write(f => {
+        const typePlugin = `/// <reference types="@w-hite/plugin-react/album" />`
+        return f.includes(typePlugin) ? f : `${f}\n${typePlugin}`
+      })
     },
     async patchClient(param) {
       const { info, specialModules } = param
@@ -101,7 +102,7 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
 
         const { clientOutDir } = outputs
         const ssrComposeModuleRootInput = resolve(module.modulePath, "../")
-        const manifest = JSON.parse(readFileSync(resolve(clientOutDir, "manifest.json"), "utf-8"))
+        const manifest = JSON.parse(readFileSync(resolve(clientOutDir, ".vite/manifest.json"), "utf-8"))
         const moduleRoot = ssrComposeModuleRootInput.slice(cwd.length + 1)
         const _coordinate: Record<string, string> = {}
         for (const key of Object.getOwnPropertyNames(manifest)) {

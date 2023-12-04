@@ -51,7 +51,15 @@ export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: 
       { type: "file", template: "plugin-react/ssr-compose/SSRComposeContext.ts", params: {} }
     ]
 
-    pendingPromises.push(...ssrConfigs.map(async f => dumpFileManager.add(f.type as "file", f.template, await renderTemplate(f.template, f.params))))
+    pendingPromises.push(
+      ...ssrConfigs.map(async f => {
+        return dumpFileManager.add({
+          type: f.type as "file",
+          file: f.template,
+          value: await renderTemplate(f.template, f.params)
+        })
+      })
+    )
   }
 
   await Promise.all(pendingPromises)
@@ -69,5 +77,11 @@ function common(clientRoutes: any[], param: PluginInitClientParam) {
     { type: "file", template: "plugin-react/router/routes.tsx", params: buildRoutesParams(clientRoutes) },
     { type: "file", template: "main.tsx", params: buildMainParams(param) }
   ]
-  return clientConfigs.map(async f => dumpFileManager.add(f.type as "file", f.template, await renderTemplate(f.template, f.params)))
+  return clientConfigs.map(async f => {
+    return dumpFileManager.add({
+      type: f.type as "file",
+      file: f.template,
+      value: await renderTemplate(f.template, f.params)
+    })
+  })
 }

@@ -12,7 +12,7 @@ import userSsrEntry from "'$mainServerPath$'"
 export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
   const { ssrContext, ssrComposeContext } = renderOptions
   const { logger, ssrCompose, req, res, serverRouteData, serverDynamicData } = ssrContext
-  const { dependenciesMap, sources } = ssrComposeContext ?? {}
+  const { sources } = ssrComposeContext ?? {}
   const { PreRender, mainEntryPath, browserScript } = await SSRServerShared.resolveContext(renderOptions)
   const { App = null, Head = null, data } = await (userSsrEntry as any)(createSSRRouter(req.originalUrl), ssrContext)
 
@@ -22,7 +22,6 @@ export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
     <SSRContext.Provider value={ssrContext}>
       <html lang="en">
         <head>
-          {ssrCompose && <script type="importmap" dangerouslySetInnerHTML={{ __html: `{"imports":${JSON.stringify(dependenciesMap)}}` }}></script>}
           <PreRender />
           {Head}
         </head>

@@ -77,7 +77,7 @@ type FlushCacheManifestProps = {
 }
 export async function flushCacheManifest(props: FlushCacheManifestProps) {
   const { cacheManifest, sourcePath, input, outDir } = props
-  const manifest = JSON.parse(readFileSync(resolve(outDir, "manifest.json"), "utf-8"))
+  const manifest = JSON.parse(readFileSync(resolve(outDir, ".vite/manifest.json"), "utf-8"))
   const cwd = process.cwd()
   const cache: SSRComposeCache = {
     lastChange: statSync(input).atimeMs,
