@@ -12,10 +12,10 @@ const cachePath = resolve(__dirname, ".cache")
 export async function loadCacheManifest(prefix: string, coordinateMap: SSRComposeCoordinateValue, renderOptions: SSRComposeRenderRemoteComponentOptions): Promise<SSRComposeManifest> {
   const { renderProps, ssrContext, ssrComposeContext } = renderOptions
   const { sourcePath } = renderProps
-  const { mode, inputs } = ssrContext
+  const { env, inputs } = ssrContext
   const { viteComponentBuild } = ssrComposeContext
 
-  if (mode === "production") {
+  if (env.mode === "production") {
     const { root } = inputs
     const { ssrComposeManifest } = await SSRServerShared.resolveContext(null as any)
     if (!ssrComposeManifest[sourcePath]) {

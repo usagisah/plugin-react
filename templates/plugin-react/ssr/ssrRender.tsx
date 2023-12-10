@@ -88,7 +88,7 @@ export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
           res.send(clientJsonData + clientScript + code)
         }
       } else {
-        res.send(`<script type="module" src="${mainEntryPath}"><\/script>`)
+        res.write(clientJsonData + clientScript + `<script type="module" src="${mainEntryPath}"><\/script>`)
       }
     }
   })

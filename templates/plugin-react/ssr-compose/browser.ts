@@ -24,7 +24,7 @@ async function loadModules(mods: { sid?: string; type: 1 | 2; path: string }[]) 
         link.crossOrigin = ""
         link.href = path
         document.head.appendChild(link)
-        return import(path)
+        return import(/*@vite-ignore*/path)
           .then(r => sources.set(sid, r.default))
           .catch(e => {
             sources.set(sid, null)
