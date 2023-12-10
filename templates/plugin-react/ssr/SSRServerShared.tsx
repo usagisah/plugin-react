@@ -1,6 +1,7 @@
 import { AlbumSSRRenderOptions } from "@w-hite/album/ssr"
 import { readFileSync } from "fs"
 import { dirname, relative, resolve } from "path"
+import { ReactNode } from "react"
 import { fileURLToPath } from "url"
 import { SSRComposeManifest } from "../ssr-compose/ssr-compose.type"
 
@@ -44,9 +45,18 @@ export class SSRServerShared {
     const { preLinks, entryFile } = renderPreLinks(ssrCompose ? `/${__app_id__}/` : "/", manifest)
     this.mainEntryPath = ssrCompose ? `/${__app_id__}/${entryFile.file}` : "/" + entryFile.file
     this.browserScript = ssrCompose ? `/${__app_id__}/browser.js` : "/browser.js"
+
+    let ComposeComp: ReactNode = null
+    if (ssrCompose) {
+      ComposeComp = (
+        <>
+          <script type="importmap" dangerouslySetInnerHTML={{ __html: `{"imports":${dependenciesMap ? JSON.stringify(dependenciesMap) : "{}"}}` }}></script>
+        </>
+      )
+    }
     this.PreRender = () => (
       <>
-        {ssrCompose && <script type="importmap" dangerouslySetInnerHTML={{ __html: `{"imports":${dependenciesMap ? JSON.stringify(dependenciesMap) : "{}"}}` }}></script>}
+        {ComposeComp}
         {preLinks.map((attrs: any, index: number) => (
           <link key={index} {...attrs} />
         ))}

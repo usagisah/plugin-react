@@ -1,8 +1,10 @@
 import viteReactPlugin from "@vitejs/plugin-react-swc"
 import { AlbumDevContext, AlbumUserPlugin, mergeConfig } from "@w-hite/album/cli"
+import { cjsImporterToEsm } from "@w-hite/album/utils/modules/cjs/transformImporters"
 import { resolveDirPath, resolveFilePath } from "@w-hite/album/utils/path/resolvePath"
 import { readFileSync, writeFileSync } from "fs"
-import { resolve } from "path"
+import { readFile, writeFile } from "fs/promises"
+import { resolve, sep } from "path"
 import { build as viteBuild } from "vite"
 import { pluginInitFile } from "./initFile.js"
 import { pluginPatchFile } from "./patchFile.js"
@@ -115,21 +117,26 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
         logger.log("生成 ssr-compose 坐标文件成功", "plugin-react")
 
         logger.log("正在打包 ssr-compose 前置文件，请耐心等待...", "plugin-react")
+        const external = ["react"]
         await viteBuild({
           plugins: [viteReactPlugin(pluginReact)],
           logLevel: "error",
           build: {
             reportCompressedSize: false,
             rollupOptions: {
+              external,
               input: resolve(dumpInput, "plugin-react/ssr-compose/browser.ts"),
               output: {
-                entryFileNames: `[name].js`
+                entryFileNames: `browser.js`
               }
             },
             emptyOutDir: false,
             outDir: clientOutDir
           }
         })
+        const browserFilePath = `${clientOutDir}${sep}browser.js`
+        const newCode = cjsImporterToEsm(await readFile(browserFilePath, "utf-8"), external)
+        await writeFile(browserFilePath, newCode, "utf-8")
         logger.log("生成 ssr-compose 前置文件成功", "plugin-react")
       }
     }

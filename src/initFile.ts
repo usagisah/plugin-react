@@ -44,7 +44,7 @@ export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: 
 
       { type: "file", template: "plugin-react/ssr-compose/browser.ts", params: {} },
       { type: "file", template: "plugin-react/ssr-compose/cacheManifest.ts", params: {} },
-      { type: "file", template: "plugin-react/ssr-compose/RemoteAppLoader.tsx", params: {} },
+      { type: "file", template: "plugin-react/ssr-compose/RemoteAppLoader.ts", params: {} },
       { type: "file", template: "plugin-react/ssr-compose/renderCompToString.tsx", params: {} },
       { type: "file", template: "plugin-react/ssr-compose/renderRemoteComponent.tsx", params: {} },
       { type: "file", template: "plugin-react/ssr-compose/ssr-compose.type.ts", params: {} },

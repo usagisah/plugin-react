@@ -1,7 +1,7 @@
 import { SSRComposeRenderRemoteComponentReturn } from "@w-hite/album/ssr"
 import { isPlainObject, isString } from "@w-hite/album/utils/check/simple"
 import { createElement, useContext } from "react"
-import { SSRContext } from "../../plugin-react/ssr/SSRContext"
+import { SSRContext } from "../ssr/SSRContext"
 import { SSRComposeContext } from "./SSRComposeContext"
 
 type RemoteAppLoaderProps = {
@@ -106,7 +106,7 @@ export function createRemoteAppLoader(props: { remote: boolean; url: string }) {
     }
     return createElement(isString(wrapperName) && wrapperName.length > 0 ? wrapperName : "div", {
       ...(isPlainObject(wrapperProps) ? wrapperProps : {}),
-      children: <Component {...props} />
+      children: createElement(Component, { ...props })
     })
   }
   return RemoteAppLoader

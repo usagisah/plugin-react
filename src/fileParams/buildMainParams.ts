@@ -21,6 +21,6 @@ export function buildMainParams(param: PluginPatchClientParam) {
     mainPath: relative(dumpInput, mainInput),
     ssr_hooks_registry,
     RemoteAppLoader,
-    basename: router.basename,
+    basename: router.basename
   }
 }
