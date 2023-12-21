@@ -1,4 +1,4 @@
-import { AlbumSSRRenderOptions } from "@w-hite/album/ssr"
+import { AlbumSSRRenderOptions } from "@w-hite/album/server"
 import { isPlainObject } from "@w-hite/album/utils/check/simple"
 import { renderToPipeableStream } from "react-dom/server"
 import { createSSRRouter } from "../router/createSSRRouter"
@@ -31,7 +31,7 @@ export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
       </html>
     </SSRContext.Provider>
   )
-  if (ssrCompose) app = <SSRComposeContext.Provider value={ssrComposeContext}>{app}</SSRComposeContext.Provider>
+  if (ssrCompose) app = <SSRComposeContext.Provider value={ssrComposeContext!}>{app}</SSRComposeContext.Provider>
 
   const { pipe } = renderToPipeableStream(app, {
     onShellReady() {
@@ -61,7 +61,7 @@ export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
         let cssCode = ""
         let jsCode = ""
         for (const sourcePath of Object.getOwnPropertyNames(sources)) {
-          const source = sources[sourcePath]
+          const source = sources![sourcePath]
           if (source === false) continue
           source.assets.css.forEach(css => (cssCode += `{type:2,path:"${css}"},`))
           jsCode += `{sid:"${sourcePath}",type:1,path:"${source.importPath}"},`

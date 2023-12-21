@@ -1,4 +1,4 @@
-import { AlbumSSRRenderOptions } from "@w-hite/album/ssr"
+import { AlbumSSRRenderOptions } from "@w-hite/album/server"
 import { readFileSync } from "fs"
 import { dirname, relative, resolve } from "path"
 import { ReactNode } from "react"
@@ -67,7 +67,7 @@ export class SSRServerShared {
   buildDevStaticInfo() {
     const { cwd, clientEntryInput, root } = this.options.ssrContext.inputs
     this.manifest = {}
-    this.mainEntryPath = "/" + relative(cwd, clientEntryInput)
+    this.mainEntryPath = "/" + relative(cwd, clientEntryInput!)
     this.browserScript = "/" + relative(cwd, resolve(root, "plugin-react/ssr-compose/browser.ts"))
     this.PreRender = () => (
       <>

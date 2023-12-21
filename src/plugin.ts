@@ -1,5 +1,5 @@
 import viteReactPlugin from "@vitejs/plugin-react-swc"
-import { AlbumDevContext, AlbumUserPlugin, mergeConfig } from "@w-hite/album/cli"
+import { AlbumContext, AlbumUserPlugin, mergeConfig } from "@w-hite/album/server"
 import { cjsImporterToEsm } from "@w-hite/album/utils/modules/cjs/transformImporters"
 import { resolveDirPath, resolveFilePath } from "@w-hite/album/utils/path/resolvePath"
 import { readFileSync, writeFileSync } from "fs"
@@ -18,7 +18,7 @@ export type PluginReact = {
 
 export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
   const { pluginReact } = props ?? {}
-  let albumContext: AlbumDevContext
+  let albumContext: AlbumContext
 
   return {
     name: "album:plugin-react",
@@ -63,8 +63,9 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
       albumContext = param.albumContext
     },
     async initClient(param) {
-      const { result, info, specialModules, appFileManager } = param
+      const { result, info, appManager, appFileManager } = param
       const { ssr, inputs } = info
+      const { specialModules } = appManager
       const { clientRoutes, serverRoutes } = await buildReactRoutes(inputs.dumpInput, specialModules)
       await pluginInitFile(clientRoutes, serverRoutes, param)
       result.realClientInput = resolve(inputs.dumpInput, "main.tsx")
@@ -77,8 +78,9 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
       })
     },
     async patchClient(param) {
-      const { info, specialModules } = param
+      const { info, appManager } = param
       const { inputs } = info
+      const { specialModules } = appManager
       const { clientRoutes, serverRoutes } = await buildReactRoutes(inputs.dumpInput, specialModules)
       await pluginPatchFile(clientRoutes, serverRoutes, param)
     },
@@ -93,38 +95,23 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
         }
       })
     },
-    async buildEnd() {
-      const { info, clientConfig, logger } = albumContext
-      const { ssr, ssrCompose, inputs, outputs } = info
-
+    async buildEnd() {      
+      const { ssr, ssrCompose, inputs, outputs, appManager, ssrComposeManager, logger } = albumContext
       if (ssr && ssrCompose) {
-        const { module } = clientConfig
-        const { cwd, dumpInput } = inputs
+        const { module } = appManager
         if (!module || !module.modulePath) return
-
-        const { clientOutDir } = outputs
-        const ssrComposeModuleRootInput = resolve(module.modulePath, "../")
-        const manifest = JSON.parse(readFileSync(resolve(clientOutDir, ".vite/manifest.json"), "utf-8"))
-        const moduleRoot = ssrComposeModuleRootInput.slice(cwd.length + 1)
-        const _coordinate: Record<string, string> = {}
-        for (const key of Object.getOwnPropertyNames(manifest)) {
-          if (key.startsWith(moduleRoot) && (key.endsWith(".tsx") || key.endsWith(".ts"))) {
-            _coordinate[key.slice(moduleRoot.length + 1)] = key
-          }
-        }
-
-        writeFileSync(resolve(clientOutDir, "../coordinate.json"), JSON.stringify(_coordinate), "utf-8")
-        logger.log("生成 ssr-compose 坐标文件成功", "plugin-react")
-
+        
         logger.log("正在打包 ssr-compose 前置文件，请耐心等待...", "plugin-react")
-        const external = ["react"]
+        const { dumpInput } = inputs
+        const { clientOutDir } = outputs
+        const { dependencies } = ssrComposeManager
         await viteBuild({
           plugins: [viteReactPlugin(pluginReact)],
           logLevel: "error",
           build: {
             reportCompressedSize: false,
             rollupOptions: {
-              external,
+              external: dependencies,
               input: resolve(dumpInput, "plugin-react/ssr-compose/browser.ts"),
               output: {
                 entryFileNames: `browser.js`
@@ -135,7 +122,7 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
           }
         })
         const browserFilePath = `${clientOutDir}${sep}browser.js`
-        const newCode = cjsImporterToEsm(await readFile(browserFilePath, "utf-8"), external)
+        const newCode = cjsImporterToEsm(await readFile(browserFilePath, "utf-8"), dependencies)
         await writeFile(browserFilePath, newCode, "utf-8")
         logger.log("生成 ssr-compose 前置文件成功", "plugin-react")
       }

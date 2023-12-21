@@ -1,4 +1,4 @@
-import { PluginInitClientParam } from "@w-hite/album/cli"
+import { PluginInitClientParam } from "@w-hite/album/server"
 import { relative, resolve } from "path"
 import { buildMainParams } from "./fileParams/buildMainParams.js"
 import { buildRoutesParams } from "./fileParams/buildRoutesParams.js"
@@ -8,11 +8,10 @@ import { renderTemplate } from "./renderTemplate.js"
 
 export async function pluginInitFile(clientRoutes: ClientRoute[], serverRoutes: ServerRoute[], param: PluginInitClientParam) {
   const pendingPromises: Promise<any>[] = []
-  const { info, clientConfig, dumpFileManager } = param
+  const { info, appManager, dumpFileManager } = param
   const { ssr, ssrCompose, inputs } = info
   const { dumpInput } = inputs
-  const { mainSSRInput } = clientConfig
-  const { router } = clientConfig
+  const { mainSSRInput, router } = appManager
 
   pendingPromises.push(...common(clientRoutes, param))
 

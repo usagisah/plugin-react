@@ -1,4 +1,4 @@
-import { AlbumSSRContext } from "@w-hite/album/ssr"
+import { AlbumSSRContext } from "@w-hite/album/server"
 import { isPlainObject } from "@w-hite/album/utils/check/simple"
 import { matchPath } from "react-router-dom"
 import { serverRoutes } from "../router/routes.ssr"

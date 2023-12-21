@@ -1,4 +1,4 @@
-import { AlbumSSRServerDynamicData, SSRComposeRenderRemoteComponentOptions } from "@w-hite/album/ssr"
+import { AlbumSSRServerDynamicData, SSRComposeRenderRemoteComponentOptions } from "@w-hite/album/server"
 import { renderToPipeableStream } from "react-dom/server"
 import { Writable } from "stream"
 import { SSRContext } from "../ssr/SSRContext"
@@ -16,7 +16,7 @@ export function renderComponentToString(filePath: string, renderOptions: SSRComp
     const _serverDynamicData = (ssrContext.serverDynamicData = {})
     const Component: any = await import(/*@vite-ignore*/ filePath).then(m => m.default)
     const app = (
-      <SSRComposeContext.Provider value={ssrComposeContext}>
+      <SSRComposeContext.Provider value={ssrComposeContext!}>
         <SSRContext.Provider value={ssrContext}>
           <Component {...renderProps.props} />
         </SSRContext.Provider>

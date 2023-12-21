@@ -1,9 +1,9 @@
-import { SpecialModule } from "@w-hite/album/cli"
+import { AppSpecialModule } from "@w-hite/album/server"
 import { relative, resolve } from "path"
 import { pathToRegexp } from "path-to-regexp"
 import { ClientRoute, ParseRouteContext, ServerRoute } from "./plugin.type.js"
 
-export async function buildReactRoutes(dumpInput: string, specialModule: SpecialModule[]) {
+export async function buildReactRoutes(dumpInput: string, specialModule: AppSpecialModule[]) {
   const { clientRoutes, serverRoutes } = await walkModule(specialModule, {
     dumpInput,
     parentClientPath: "",
@@ -12,7 +12,7 @@ export async function buildReactRoutes(dumpInput: string, specialModule: Special
   return { clientRoutes: moveErrorToLast(clientRoutes), serverRoutes: moveErrorToLast(serverRoutes) }
 }
 
-async function walkModule(mods: SpecialModule[], ctx: ParseRouteContext) {
+async function walkModule(mods: AppSpecialModule[], ctx: ParseRouteContext) {
   let clientRoutes: ClientRoute[] = []
   let serverRoutes: ServerRoute[] = []
   for (const mod of mods) {
@@ -23,7 +23,7 @@ async function walkModule(mods: SpecialModule[], ctx: ParseRouteContext) {
   return { clientRoutes: orderRoutes(clientRoutes), serverRoutes: orderRoutes(serverRoutes) }
 }
 
-async function moduleToRoute(mod: SpecialModule, ctx: ParseRouteContext) {
+async function moduleToRoute(mod: AppSpecialModule, ctx: ParseRouteContext) {
   const { dumpInput, parentClientPath, parentServerPath } = ctx
   const routeRecordName = mod.filename
   const clientCompPath = mod.routePath.replaceAll("$", ":")

@@ -1,4 +1,4 @@
-import { SSRComposeRenderRemoteComponentReturn } from "@w-hite/album/ssr"
+import { SSRComposeRenderRemoteComponentReturn } from "@w-hite/album/server"
 import { isPlainObject, isString } from "@w-hite/album/utils/check/simple"
 import { createElement, useContext } from "react"
 import { SSRContext } from "../ssr/SSRContext"

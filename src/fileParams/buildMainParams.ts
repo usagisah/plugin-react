@@ -1,11 +1,11 @@
-import { PluginPatchClientParam } from "@w-hite/album/cli"
+import { PluginPatchClientParam } from "@w-hite/album/server"
 import { relative } from "path"
 
 export function buildMainParams(param: PluginPatchClientParam) {
-  const { clientConfig, info } = param
+  const { appManager, info } = param
   const { ssr, ssrCompose, inputs } = info
   const { dumpInput } = inputs
-  const { router, mainInput } = clientConfig
+  const { router, mainInput } = appManager
   let ssr_hooks_registry = ""
   let RemoteAppLoader = ""
 

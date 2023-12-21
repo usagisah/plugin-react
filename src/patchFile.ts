@@ -1,4 +1,4 @@
-import { PluginPatchClientParam } from "@w-hite/album/cli"
+import { PluginPatchClientParam } from "@w-hite/album/server"
 import { buildRoutesParams } from "./fileParams/buildRoutesParams.js"
 import { buildRoutesSSRParams } from "./fileParams/buildRoutesSSRParams.js"
 import { ClientRoute, ServerRoute } from "./plugin.type.js"
