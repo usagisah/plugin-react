@@ -11,7 +11,7 @@ export async function renderRemoteComponent(renderOptions: SSRComposeRenderRemot
   await SSRServerShared.resolveContext(renderOptions)
 
   const cacheManifest = await loadCacheManifest(prefix, sourcePath, renderOptions)
-  const cache = cacheManifest[sourcePath]
+  const cache = cacheManifest![sourcePath]
   // ssr-compose 下会使用 useContext 会出现不同实例
   const renderToString = serverMode === "start" ? (await import(/* @vite-ignore */ projectMap.get(prefix)!.mainServerInput)).renderComponentToString : renderComponentToString
   const res = await renderToString(cache.filePath, renderOptions)
@@ -25,6 +25,8 @@ export async function renderRemoteComponent(renderOptions: SSRComposeRenderRemot
 
 function normalizeSourcePath(renderProps: SSRComposeRenderProps) {
   let { sourcePath } = renderProps
-  if (sourcePath.startsWith("/")) sourcePath = renderProps.sourcePath = sourcePath.slice(1)
+  if (sourcePath.startsWith("/")) sourcePath = sourcePath.slice(1)
+  if (sourcePath.endsWith("/")) sourcePath = sourcePath.slice(0, -1)
+  renderProps.sourcePath = sourcePath
   return { prefix: sourcePath.split("/")[0], sourcePath }
 }
