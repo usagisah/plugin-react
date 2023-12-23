@@ -26,7 +26,7 @@ export default function pluginReact(props?: PluginReact): AlbumUserPlugin {
       if (!param.config.ssrCompose) return
       param.config = mergeConfig(param.config, {
         ssrCompose: {
-          dependencies: ["react", "react/jsx-runtime", "react-dom", "react-dom/client"]
+          dependencies: ["react", "react/jsx-runtime", "react/jsx-dev-runtime", "react-dom", "react-dom/client"]
         }
       })
     },

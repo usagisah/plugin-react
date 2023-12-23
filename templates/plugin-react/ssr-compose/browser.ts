@@ -9,10 +9,10 @@ _w.__$_album_ssr_compose = {
 
 const loadMap: Record<string, any> = {}
 // type 1-js 2-css
-async function loadModules(mods: { sid?: string; type: 1 | 2; path: string }[]) {
+async function loadModules(mods: { sid?: string; type: 1 | 2; paths: string[] }[]) {
   const { sources } = _w.__$_album_ssr_compose
-  await Promise.all(
-    mods.map(({ sid, type, path }) => {
+  const promises = mods.map(({ sid, type, paths }) => {
+    const ps = paths.map(path => {
       const id = type + "_" + path
       if (id in loadMap) return
       loadMap[id] = true
@@ -24,7 +24,7 @@ async function loadModules(mods: { sid?: string; type: 1 | 2; path: string }[]) 
         link.crossOrigin = ""
         link.href = path
         document.head.appendChild(link)
-        return import(/*@vite-ignore*/path)
+        return import(/*@vite-ignore*/ path)
           .then(r => sources.set(sid, r.default))
           .catch(e => {
             sources.set(sid, null)
@@ -46,5 +46,7 @@ async function loadModules(mods: { sid?: string; type: 1 | 2; path: string }[]) 
         throw "未知的加载格式"
       }
     })
-  )
+    return Promise.allSettled(ps)
+  })
+  await Promise.all(promises)
 }

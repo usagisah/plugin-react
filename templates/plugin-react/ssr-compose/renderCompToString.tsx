@@ -1,16 +1,11 @@
-import { AlbumSSRServerDynamicData, SSRComposeRenderRemoteComponentOptions } from "@w-hite/album/server"
+import { SSRComposeRenderRemoteComponentOptions } from "@w-hite/album/server"
 import { renderToPipeableStream } from "react-dom/server"
 import { Writable } from "stream"
 import { SSRContext } from "../ssr/SSRContext"
 import { SSRComposeContext } from "./SSRComposeContext"
 
-type ReturnType = {
-  html: string
-  serverDynamicData: AlbumSSRServerDynamicData
-}
-
 export function renderComponentToString(filePath: string, renderOptions: SSRComposeRenderRemoteComponentOptions) {
-  return new Promise<ReturnType>(async (resolve, reject) => {
+  return new Promise<Record<string, any>>(async (resolve, reject) => {
     const { renderProps, ssrContext, ssrComposeContext } = renderOptions
     const { serverDynamicData } = ssrContext
     const _serverDynamicData = (ssrContext.serverDynamicData = {})
@@ -25,16 +20,16 @@ export function renderComponentToString(filePath: string, renderOptions: SSRComp
 
     let html = ""
     const writeStream = new Writable({
-      write(chunk, encoding, callback) {
+      write(chunk, _, cb) {
         html += chunk.toString()
-        callback()
+        cb()
       }
     })
     const { pipe } = renderToPipeableStream(app, {
       onAllReady() {
         pipe(writeStream)
         ssrContext.serverDynamicData = serverDynamicData
-        resolve({ html, serverDynamicData: _serverDynamicData })
+        resolve({ serverDynamicData: _serverDynamicData, html })
       },
       onError(error) {
         reject(error)

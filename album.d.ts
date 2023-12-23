@@ -37,6 +37,6 @@ declare module "@w-hite/album" {
   export type ComponentRemoteAppLoader = FC<RemoteAppLoaderProps>
 
   export interface CreateRemoteAppLoader {
-    (props: { remote: boolean, url?: string }): ComponentRemoteAppLoader
+    (props: { remote: boolean, url: string }): ComponentRemoteAppLoader
   }
 }

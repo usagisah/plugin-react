@@ -63,8 +63,11 @@ export async function ssrRender(renderOptions: AlbumSSRRenderOptions) {
         for (const sourcePath of Object.getOwnPropertyNames(sources)) {
           const source = sources![sourcePath]
           if (source === false) continue
-          source.assets.css.forEach(css => (cssCode += `{type:2,path:"${css}"},`))
-          jsCode += `{sid:"${sourcePath}",type:1,path:"${source.importPath}"},`
+          source.css.forEach(css => (cssCode += `{type:2,paths:["${css}"]},`))
+
+          let importers = ""
+          source.importPaths.forEach(p => (importers += `"${p}",`))
+          jsCode += `{sid:"${sourcePath}",type:1,paths:[${importers}]},`
         }
         const loadCode = `const {loadModules}=window.__$_album_ssr_compose;const m=await loadModules([${cssCode + jsCode}]);`
         clientScript = `<script type="module">await import("${browserScript}");${loadCode}import("${mainEntryPath}");</script>`
