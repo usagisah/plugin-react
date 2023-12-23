@@ -19,7 +19,7 @@ export async function renderRemoteComponent(renderOptions: SSRComposeRenderRemot
     sources,
     importPath: cache.importPath,
     css: cache.css,
-    ...(await renderToString(cache.filePath, renderOptions))
+    ...(await renderToString(cache.importPath, renderOptions))
   }
   return value
 }
